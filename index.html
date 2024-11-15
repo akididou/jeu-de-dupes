@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+    <title>Parfums des Personnages - Jeux de Dupes</title>
+    <link rel="stylesheet"
+          href="css/style.css">
+</head>
+
+<body>
+    <div class="instructions">Cliquez sur les personnages pour découvrir leurs parfums</div>
+
+    <div class="container">
+        <img src="assets/affiche.jpg"
+             class="image"
+             alt="Affiche du film Jeux de Dupes">
+        <div class="map-area"
+             style="right: 0; top: 0%; width: 57%; height: 100%"
+             onclick="openModal('homme')"></div>
+        <div class="map-area"
+             style="left: 0;top: 0%;width: 43%;height: 100%;"
+             onclick="openModal('femme')"></div>
+    </div>
+
+    <div id="modalHomme"
+         class="modal">
+        <div class="modal-content">
+            <span class="close"
+                  onclick="closeModal('homme')">&times;</span>
+            <h2>Collection de Parfums Masculins</h2>
+            <ul class="parfum-list"
+                id="hommeList"></ul>
+        </div>
+    </div>
+
+    <div id="modalFemme"
+         class="modal">
+        <div class="modal-content">
+            <span class="close"
+                  onclick="closeModal('femme')">&times;</span>
+            <h2>Collection de Parfums Féminins</h2>
+            <ul class="parfum-list"
+                id="femmeList"></ul>
+        </div>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script src="js/main.js"></script>
+</body>
+
+</html>
