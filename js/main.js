@@ -31,7 +31,7 @@ function createParfumList(type) {
         const li = document.createElement('li');
         li.innerHTML = `
             <span class="parfum-numero">${parfum.numero}</span>
-            <span class="parfum-name">${parfum.nom}</span>
+            <span class="parfum-name">Évoque ${parfum.nom}</span>
             <span class="parfum-brand">${parfum.marque}</span>
         `;
         list.appendChild(li);
