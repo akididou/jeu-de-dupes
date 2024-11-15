@@ -28,6 +28,7 @@ body {
     width: 100%;
     height: auto;
     display: block;
+    max-height: calc(100vh - 110px);
 }
 
 .map-area {
