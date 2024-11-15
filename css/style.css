@@ -57,7 +57,7 @@ body {
 .modal-content {
     position: relative;
     background-color: #fff;
-    margin:auto;
+    margin: auto;
     padding: 30px;
     width: 90%;
     max-width: 500px;
@@ -66,7 +66,7 @@ body {
     transform: translateY(20px);
     animation: modalSlide 0.3s forwards;
     height: 80%;
-    top:10%;
+    top: 10%;
     overflow-y: auto;
 }
 
@@ -145,7 +145,7 @@ body {
     }
 
     .modal-content {
-        margin: 5vh auto;
+        margin: auto;
         padding: 20px;
         max-height: 90vh;
         overflow-y: auto;
