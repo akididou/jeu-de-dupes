@@ -30,6 +30,7 @@ body {
     height: auto;
     display: block;
     max-height: calc(100vh - 110px);
+    object-fit: contain;
 }
 
 .map-area {
