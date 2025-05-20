@@ -130,7 +130,15 @@ function createParfumList(type) {
         return;
     }
     
-    parfumsData[type].forEach(parfum => {
+    // Trier les parfums par marque puis par nom
+    const sortedParfums = [...parfumsData[type]].sort((a, b) => {
+        if (a.marque === b.marque) {
+            return a.nom.localeCompare(b.nom);
+        }
+        return a.marque.localeCompare(b.marque);
+    });
+    
+    sortedParfums.forEach(parfum => {
         const li = document.createElement('li');
         li.innerHTML = `
             <span class="parfum-numero">${parfum.numero}</span>
