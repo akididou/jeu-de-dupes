@@ -6,10 +6,13 @@ let parfumsData = {
 async function loadParfumsData() {
     try {
         const sheetId = '11QQ55WHs43F2B-M8TdxmKHM42U5h7QoWmHlSBAKt3MI';
-        const sheetNumber = 1; // Commence à 1 pour la première feuille
+        const sheetName = 'data'; // Nom de votre feuille
         
-        // Cette URL spéciale convertit la feuille Google en JSON
-        const url = `https://spreadsheets.google.com/feeds/list/${sheetId}/${sheetNumber}/public/values?alt=json`;
+        // URL pour l'API Sheets v4
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}?key=YOUR_API_KEY`;
+        
+        // OU utilisez cette URL qui ne nécessite pas de clé API si le document est public
+        // const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
         
         const response = await fetch(url);
         
@@ -18,22 +21,27 @@ async function loadParfumsData() {
         }
         
         const data = await response.json();
-        const entries = data.feed.entry || [];
         
         // Vider les données existantes
         parfumsData.homme = [];
         parfumsData.femme = [];
         
-        // Traiter chaque entrée (ligne)
-        entries.forEach(entry => {
-            // Les colonnes seront accessibles sous la forme gsx$nomcolonne
-            // Les noms de colonnes sont en minuscules sans espaces
-            const categorie = entry.gsx$categorie.$t;
-            const numero = entry.gsx$numero.$t;
-            const nom = entry.gsx$nom.$t;
-            const marque = entry.gsx$marque.$t;
+        // Interpréter les données (adaptez selon le format retourné)
+        const rows = data.values || [];
+        
+        // La première ligne contient les en-têtes
+        const headers = rows[0];
+        
+        // Traiter chaque ligne à partir de l'index 1 (après les en-têtes)
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            if (row.length < 4) continue; // Ignorer les lignes incomplètes
             
-            // Vérifier si la catégorie existe dans notre structure
+            const categorie = row[0];
+            const numero = row[1];
+            const nom = row[2];
+            const marque = row[3];
+            
             if (parfumsData[categorie]) {
                 parfumsData[categorie].push({
                     numero,
@@ -41,13 +49,13 @@ async function loadParfumsData() {
                     marque
                 });
             }
-        });
+        }
         
         console.log('Données chargées avec succès:', parfumsData);
     } catch (error) {
         console.error('Erreur lors du chargement des données:', error);
         
-        // En cas d'erreur, essayer avec la nouvelle API v4 JSON
+        // En cas d'erreur, essayer la méthode alternative
         try {
             await loadParfumsDataAlternative();
         } catch (secondError) {
