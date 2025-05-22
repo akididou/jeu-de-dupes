@@ -5,9 +5,9 @@ let parfumsData = {
 
 async function loadParfumsData() {
     try {
-        const apiKey = "AIzaSyD7GgjAJmuNjQWGGcnpsaZTwpaOAF_mg5M";
-        const sheetId = '11QQ55WHs43F2B-M8TdxmKHM42U5h7QoWmHlSBAKt3MI';
-        const sheetName = 'data'; // Nom de votre feuille
+        const apiKey = process.env.GOOGLE_SHEETS_API_KEY;
+        const sheetId = process.env.GOOGLE_SHEETS_ID;
+        const sheetName = 'data';
         
         // URL pour l'API Sheets v4
         const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}?key=${apiKey}`;
