@@ -5,11 +5,12 @@ let parfumsData = {
 
 async function loadParfumsData() {
     try {
+        const apiKey = "AIzaSyD7GgjAJmuNjQWGGcnpsaZTwpaOAF_mg5M";
         const sheetId = '11QQ55WHs43F2B-M8TdxmKHM42U5h7QoWmHlSBAKt3MI';
         const sheetName = 'data'; // Nom de votre feuille
         
         // URL pour l'API Sheets v4
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}?key=YOUR_API_KEY`;
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}?key=${apiKey}`;
         
         // OU utilisez cette URL qui ne nécessite pas de clé API si le document est public
         // const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
