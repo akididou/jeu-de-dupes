@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test des clics - Jeu de Dupes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .instructions {
+            background: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+            border: 1px solid #ffeeba;
+        }
+        .instructions ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .instructions li {
+            margin: 5px 0;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        #log {
+            margin-top: 20px;
+            padding: 10px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            padding: 5px;
+            margin: 2px 0;
+            border-left: 3px solid #28a745;
+            padding-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Test des Zones Cliquables</h1>
+
+        <div class="status success">
+            ✅ Correction appliquée: pointer-events: none sur l'image
+        </div>
+
+        <div class="status success">
+            ✅ Correction appliquée: z-index: 10 sur les boutons
+        </div>
+
+        <div class="instructions">
+            <strong>📋 Instructions de test:</strong>
+            <ol>
+                <li><strong>Ouvrir</strong> le fichier <code>index.html</code> dans votre navigateur</li>
+                <li><strong>Cliquer</strong> sur le côté DROIT de l'affiche (personnage homme)</li>
+                <li><strong>Vérifier</strong> que la modale "Parfums Masculins" s'ouvre</li>
+                <li><strong>Fermer</strong> la modale (bouton × ou Échap)</li>
+                <li><strong>Cliquer</strong> sur le côté GAUCHE de l'affiche (personnage femme)</li>
+                <li><strong>Vérifier</strong> que la modale "Parfums Féminins" s'ouvre</li>
+            </ol>
+        </div>
+
+        <h2>🎯 Que tester:</h2>
+        <ul>
+            <li>✅ Clic sur le côté DROIT de l'image ouvre "Parfums Masculins"</li>
+            <li>✅ Clic sur le côté GAUCHE de l'image ouvre "Parfums Féminins"</li>
+            <li>✅ Survol de la souris montre un effet visuel (fond blanc transparent)</li>
+            <li>✅ Curseur change en "pointer" (main) au survol</li>
+            <li>✅ Navigation au clavier fonctionne (Tab → Enter)</li>
+        </ul>
+
+        <h2>🔧 Corrections appliquées:</h2>
+
+        <h3>1. Image transparente aux clics</h3>
+        <pre style="background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto;"><code>.image {
+    pointer-events: none; /* Les clics passent à travers */
+}</code></pre>
+
+        <h3>2. Boutons au premier plan</h3>
+        <pre style="background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto;"><code>.map-area {
+    z-index: 10; /* Au-dessus de l'image */
+}</code></pre>
+
+        <h2>🚀 Actions rapides:</h2>
+        <button onclick="window.location.href='index.html'">Ouvrir l'application</button>
+        <button onclick="window.location.href='docs/GUIDE-TESTS.md'">Voir le guide de tests complet</button>
+
+        <h2>📝 Journal de test:</h2>
+        <div id="log">
+            <div class="log-entry">✅ Fichier de test créé</div>
+            <div class="log-entry">✅ Corrections CSS appliquées</div>
+            <div class="log-entry">⏳ En attente de tests manuels...</div>
+        </div>
+    </div>
+
+    <script>
+        // Ajouter une entrée de log avec timestamp
+        function addLog(message, type = 'success') {
+            const log = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            const time = new Date().toLocaleTimeString();
+            entry.textContent = `[${time}] ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // Log au chargement
+        window.addEventListener('load', () => {
+            addLog('Page de test chargée avec succès');
+        });
+    </script>
+</body>
+</html>

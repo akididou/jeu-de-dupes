@@ -4,6 +4,19 @@ Toutes les modifications notables apportées au projet.
 
 ---
 
+## [0.2.1] - 2026-08-12 (Hotfix)
+
+### Corrigé
+- **Bug critique:** Les clics sur les zones de l'image ne fonctionnaient pas
+  - Ajout de `pointer-events: none` sur l'image pour permettre aux clics de passer
+  - Ajout de `z-index: 10` sur les boutons overlay
+  - Création de TEST-RAPIDE.html pour faciliter les tests
+
+**Fichiers modifiés:**
+- css/style.css: pointer-events et z-index
+
+---
+
 ## [0.2.0] - 2026-08-12 ✅
 
 ### Ajouté

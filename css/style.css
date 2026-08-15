@@ -95,6 +95,7 @@ body {
     display: block;
     max-height: calc(100vh - 110px);
     object-fit: contain;
+    pointer-events: none; /* Permettre aux clics de passer à travers vers les boutons */
 }
 
 /* ACCESSIBILITÉ: Zones cliquables transformées en boutons */
@@ -106,6 +107,7 @@ body {
     border: none;
     padding: 0;
     font-size: 0;
+    z-index: 10; /* S'assurer que les boutons sont au-dessus de l'image */
 }
 
 .map-area:hover {
