@@ -5,113 +5,146 @@ let parfumsData = {
 
 async function loadParfumsData() {
     try {
-        const apiKey = process.env.GOOGLE_SHEETS_API_KEY;
-        const sheetId = process.env.GOOGLE_SHEETS_ID;
-        const sheetName = 'data';
-        
-        // URL pour l'API Sheets v4
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}?key=${apiKey}`;
-        
-        // OU utilisez cette URL qui ne nécessite pas de clé API si le document est public
-        // const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
-        
+        // SÉCURITÉ: Utiliser l'API publique opensheet.elk.sh au lieu d'exposer une clé API
+        // Cette méthode ne nécessite pas de clé API et fonctionne avec les Google Sheets publiques
+        const sheetId = '11QQ55WHs43F2B-M8TdxmKHM42U5h7QoWmHlSBAKt3MI';
+        const url = `https://opensheet.elk.sh/${sheetId}/1`;
+
         const response = await fetch(url);
         
         if (!response.ok) {
             throw new Error(`Erreur HTTP: ${response.status}`);
         }
-        
-        const data = await response.json();
-        
+
+        const entries = await response.json();
+    
         // Vider les données existantes
         parfumsData.homme = [];
         parfumsData.femme = [];
-        
-        // Interpréter les données (adaptez selon le format retourné)
-        const rows = data.values || [];
-        
-        // La première ligne contient les en-têtes
-        const headers = rows[0];
-        
-        // Traiter chaque ligne à partir de l'index 1 (après les en-têtes)
-        for (let i = 1; i < rows.length; i++) {
-            const row = rows[i];
-            if (row.length < 4) continue; // Ignorer les lignes incomplètes
-            
-            const categorie = row[0];
-            const numero = row[1];
-            const nom = row[2];
-            const marque = row[3];
-            
+
+        // SÉCURITÉ: Validation et sanitisation des données
+        entries.forEach(entry => {
+            // Valider que l'entrée est un objet valide
+            if (!entry || typeof entry !== 'object') return;
+
+            const categorie = String(entry.categorie || '').toLowerCase();
+            const numero = String(entry.numero || '').trim();
+            const nom = String(entry.nom || '').trim();
+            const marque = String(entry.marque || '').trim();
+
+            // Validation: ignorer les entrées invalides
+            if (!categorie || !numero || !nom || !marque) return;
+            if (nom.length > 200 || marque.length > 100) return; // Limite de longueur
+
+            // Vérifier si la catégorie existe dans notre structure
             if (parfumsData[categorie]) {
                 parfumsData[categorie].push({
-                    numero,
-                    nom,
-                    marque
+                    numero: numero,
+                    nom: nom,
+                    marque: marque
                 });
             }
+        });
+
+        if (process.env.NODE_ENV === 'development') {
+            console.log('Données chargées avec succès:', parfumsData);
         }
-        
-        console.log('Données chargées avec succès:', parfumsData);
     } catch (error) {
-        console.error('Erreur lors du chargement des données:', error);
-        
-        // En cas d'erreur, essayer la méthode alternative
-        try {
-            await loadParfumsDataAlternative();
-        } catch (secondError) {
-            console.error('Échec également avec la méthode alternative:', secondError);
+        if (process.env.NODE_ENV === 'development') {
+            console.error('Erreur lors du chargement des données:', error);
         }
+        // Afficher un message d'erreur accessible à l'utilisateur
+        showUserMessage('Erreur lors du chargement des données. Veuillez rafraîchir la page.', 'error');
     }
 }
 
-// Méthode alternative utilisant une autre URL de Google Sheets
-async function loadParfumsDataAlternative() {
-    const sheetId = '11QQ55WHs43F2B-M8TdxmKHM42U5h7QoWmHlSBAKt3MI';
-    
-    // Format alternatif qui fonctionne souvent mieux
-    const url = `https://opensheet.elk.sh/${sheetId}/1`;
-    
-    const response = await fetch(url);
-    
-    if (!response.ok) {
-        throw new Error(`Erreur HTTP: ${response.status}`);
-    }
-    
-    const entries = await response.json();
-    
-    // Vider les données existantes
-    parfumsData.homme = [];
-    parfumsData.femme = [];
-    
-    // Traiter chaque entrée (ligne)
-    entries.forEach(entry => {
-        const categorie = entry.categorie;
-        const numero = entry.numero;
-        const nom = entry.nom;
-        const marque = entry.marque;
-        
-        // Vérifier si la catégorie existe dans notre structure
-        if (parfumsData[categorie]) {
-            parfumsData[categorie].push({
-                numero,
-                nom,
-                marque
-            });
-        }
-    });
-    
-    console.log('Données chargées avec succès (méthode alternative):', parfumsData);
+// Fonction pour afficher un message accessible à l'utilisateur
+function showUserMessage(message, type = 'info') {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `user-message user-message-${type}`;
+    messageDiv.setAttribute('role', type === 'error' ? 'alert' : 'status');
+    messageDiv.setAttribute('aria-live', type === 'error' ? 'assertive' : 'polite');
+    messageDiv.textContent = message;
+
+    document.body.insertBefore(messageDiv, document.body.firstChild);
+
+    // Retirer le message après 5 secondes
+    setTimeout(() => {
+        messageDiv.remove();
+    }, 5000);
 }
+
+// ACCESSIBILITÉ: Gestion du focus pour les modales
+let lastFocusedElement = null;
 
 function openModal(type) {
-    document.getElementById('modal' + type.charAt(0).toUpperCase() + type.slice(1)).style.display = 'block';
+    const modalId = 'modal' + type.charAt(0).toUpperCase() + type.slice(1);
+    const modal = document.getElementById(modalId);
+
+    // Sauvegarder l'élément qui avait le focus
+    lastFocusedElement = document.activeElement;
+
+    modal.style.display = 'block';
     document.body.style.overflow = 'hidden';
+
+    // ACCESSIBILITÉ: Focus sur le bouton de fermeture
+    setTimeout(() => {
+        const closeButton = modal.querySelector('.close');
+        if (closeButton) {
+            closeButton.focus();
+        }
+    }, 100);
+
+    // ACCESSIBILITÉ: Piéger le focus dans la modale
+    modal.addEventListener('keydown', trapFocus);
 }
 
 function closeModal(type) {
-    document.getElementById('modal' + type.charAt(0).toUpperCase() + type.slice(1)).style.display = 'none';
+    const modalId = 'modal' + type.charAt(0).toUpperCase() + type.slice(1);
+    const modal = document.getElementById(modalId);
+
+    modal.style.display = 'none';
     document.body.style.overflow = 'auto';
+
+    // Retirer le piège de focus
+    modal.removeEventListener('keydown', trapFocus);
+
+    // ACCESSIBILITÉ: Restaurer le focus à l'élément précédent
+    if (lastFocusedElement) {
+        setTimeout(() => {
+            lastFocusedElement.focus();
+            lastFocusedElement = null;
+        }, 100);
+    }
+}
+
+// ACCESSIBILITÉ: Fonction pour piéger le focus dans la modale
+function trapFocus(event) {
+    if (event.key !== 'Tab') return;
+
+    const modal = event.currentTarget;
+    const focusableElements = modal.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+
+    if (focusableElements.length === 0) return;
+
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+
+    if (event.shiftKey) {
+        // Tab + Shift
+        if (document.activeElement === firstElement) {
+            event.preventDefault();
+            lastElement.focus();
+        }
+    } else {
+        // Tab seul
+        if (document.activeElement === lastElement) {
+            event.preventDefault();
+            firstElement.focus();
+        }
+    }
 }
 
 window.onclick = function (event) {
@@ -133,12 +166,15 @@ document.addEventListener('keydown', function (event) {
 function createParfumList(type) {
     const list = document.getElementById(type + 'List');
     list.innerHTML = '';
-    
+
     if (!parfumsData[type] || parfumsData[type].length === 0) {
-        list.innerHTML = '<li>Aucun parfum trouvé dans cette catégorie</li>';
+        const li = document.createElement('li');
+        li.textContent = 'Aucun parfum trouvé dans cette catégorie';
+        li.className = 'empty-message';
+        list.appendChild(li);
         return;
     }
-    
+
     // Trier les parfums par marque puis par nom
     const sortedParfums = [...parfumsData[type]].sort((a, b) => {
         if (a.marque === b.marque) {
@@ -146,16 +182,49 @@ function createParfumList(type) {
         }
         return a.marque.localeCompare(b.marque);
     });
-    
+
+    // SÉCURITÉ: Utiliser createElement et textContent au lieu de innerHTML
     sortedParfums.forEach(parfum => {
         const li = document.createElement('li');
-        li.innerHTML = `
-            <span class="parfum-numero">${parfum.numero}</span>
-            <span class="parfum-name"><span>Évoque</span> ${parfum.nom}</span>
-            <span class="parfum-brand">${parfum.marque}</span>
-        `;
+
+        // Numéro
+        const numeroSpan = document.createElement('span');
+        numeroSpan.className = 'parfum-numero';
+        numeroSpan.textContent = parfum.numero;
+        numeroSpan.setAttribute('aria-label', `Numéro ${parfum.numero}`);
+
+        // Nom
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'parfum-name';
+
+        const evoqueSpan = document.createElement('span');
+        evoqueSpan.textContent = 'Évoque';
+        evoqueSpan.className = 'evoque-label';
+
+        nameSpan.appendChild(evoqueSpan);
+        nameSpan.appendChild(document.createTextNode(' ' + parfum.nom));
+
+        // Marque
+        const brandSpan = document.createElement('span');
+        brandSpan.className = 'parfum-brand';
+        brandSpan.textContent = parfum.marque;
+
+        // Assembler
+        li.appendChild(numeroSpan);
+        li.appendChild(nameSpan);
+        li.appendChild(brandSpan);
+
         list.appendChild(li);
     });
+
+    // Annoncer le nombre de parfums chargés (accessibilité)
+    const announcement = document.createElement('div');
+    announcement.setAttribute('role', 'status');
+    announcement.setAttribute('aria-live', 'polite');
+    announcement.className = 'sr-only';
+    announcement.textContent = `${sortedParfums.length} parfums ${type === 'homme' ? 'masculins' : 'féminins'} affichés, triés par marque`;
+    document.body.appendChild(announcement);
+    setTimeout(() => announcement.remove(), 1000);
 }
 
 document.addEventListener('DOMContentLoaded', () => {

@@ -4,15 +4,78 @@
     box-sizing: border-box;
 }
 
+/* ACCESSIBILITÉ: Classe pour masquer visuellement mais garder accessible aux lecteurs d'écran */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* ACCESSIBILITÉ: Skip to content link */
+.skip-to-content {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: #000;
+    color: white;
+    padding: 0.5rem 1rem;
+    text-decoration: none;
+    z-index: 10000;
+    font-weight: 600;
+    border-radius: 0 0 4px 0;
+}
+
+.skip-to-content:focus {
+    top: 0;
+    outline: 3px solid #4A90E2;
+    outline-offset: 2px;
+}
+
+html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+}
+
 body {
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     background: black;
     min-height: 100vh;
-    padding: 20px;
+    padding: clamp(10px, 3vw, 20px);
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+}
+
+/* Messages utilisateur */
+.user-message {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    z-index: 10001;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.user-message-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 2px solid #f5c6cb;
+}
+
+.user-message-info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border: 2px solid #bee5eb;
 }
 
 .container {
@@ -23,6 +86,7 @@ body {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     overflow: hidden;
     width: 100%;
+    max-width: 1200px;
 }
 
 .image {
@@ -33,14 +97,30 @@ body {
     object-fit: contain;
 }
 
+/* ACCESSIBILITÉ: Zones cliquables transformées en boutons */
 .map-area {
     position: absolute;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: background-color 0.2s ease;
+    background: transparent;
+    border: none;
+    padding: 0;
+    font-size: 0;
 }
 
 .map-area:hover {
     background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* ACCESSIBILITÉ: Focus visible pour la navigation au clavier */
+.map-area:focus-visible {
+    outline: 3px solid #4A90E2;
+    outline-offset: -3px;
+    background-color: rgba(74, 144, 226, 0.3);
+}
+
+.map-area:active {
+    background-color: rgba(255, 255, 255, 0.3);
 }
 
 .modal {
@@ -77,6 +157,7 @@ body {
     }
 }
 
+/* ACCESSIBILITÉ: Bouton de fermeture accessible */
 .close {
     position: absolute;
     right: 20px;
@@ -84,20 +165,39 @@ body {
     font-size: 28px;
     cursor: pointer;
     color: #666;
-    transition: color 0.3s;
+    transition: all 0.2s ease;
+    background: transparent;
+    border: 2px solid transparent;
+    border-radius: 4px;
+    padding: 4px 8px;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .close:hover {
     color: #000;
+    background-color: #f0f0f0;
+}
+
+/* ACCESSIBILITÉ: Focus visible */
+.close:focus-visible {
+    outline: 3px solid #4A90E2;
+    outline-offset: 2px;
+    border-color: #4A90E2;
+    color: #000;
 }
 
 .modal-content h2 {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Playfair Display', -apple-system, serif;
     color: #1a1a1a;
     margin-bottom: 20px;
-    font-size: 24px;
+    font-size: clamp(1.25rem, 4vw, 1.5rem);
     border-bottom: 2px solid #f0f0f0;
     padding-bottom: 10px;
+    padding-right: 50px;
 }
 
 .parfum-list {
@@ -125,10 +225,11 @@ body {
 .parfum-name {
     font-weight: 600;
     color: #2c3e50;
+}
 
-    span {
-        font-weight: 300;
-    }
+.evoque-label {
+    font-weight: 300;
+    font-style: italic;
 }
 
 .parfum-brand {
@@ -140,10 +241,62 @@ body {
 .instructions {
     text-align: center;
     color: #fff;
-    margin: 20px 0;
-    font-size: 1.2em;
+    margin: clamp(10px, 3vw, 20px) 0;
+    font-size: clamp(1rem, 3vw, 1.2em);
+    padding: 0 10px;
 }
 
+.empty-message {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+    font-style: italic;
+}
+
+/* ACCESSIBILITÉ: Support prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    .map-area,
+    .close,
+    .modal-content {
+        transition: none !important;
+        animation: none !important;
+    }
+}
+
+/* RESPONSIVE: Très petits mobiles */
+@media (max-width: 400px) {
+    body {
+        padding: 5px;
+    }
+
+    .modal-content {
+        width: 95%;
+        padding: 15px;
+        max-height: 90vh;
+    }
+
+    .parfum-list li {
+        font-size: 0.85rem;
+        padding: 10px;
+    }
+
+    .close {
+        right: 10px;
+        top: 10px;
+        font-size: 24px;
+    }
+}
+
+/* RESPONSIVE: Tablettes et mobiles */
 @media (max-width: 768px) {
     .container {
         margin: 10px;
@@ -152,10 +305,11 @@ body {
     .modal-content {
         margin: auto;
         padding: 20px;
-        max-height: 90vh;
+        max-height: 85vh;
         overflow-y: auto;
         display: flex;
         flex-direction: column;
+        width: 90%;
     }
 
     .parfum-list {
@@ -183,5 +337,38 @@ body {
     .parfum-brand {
         grid-area: brand;
         text-align: left;
+    }
+}
+
+/* RESPONSIVE: Orientation paysage sur mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+    .modal-content {
+        max-height: 95vh;
+        padding: 10px 15px;
+        top: 2.5%;
+    }
+
+    .modal-content h2 {
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+    }
+
+    .parfum-list li {
+        padding: 8px;
+        font-size: 0.9rem;
+    }
+}
+
+/* RESPONSIVE: Support du zoom */
+@media (max-width: 600px) {
+    html {
+        font-size: 14px;
+    }
+}
+
+/* Support des écrans haute résolution */
+@supports (font-size: clamp(1rem, 2.5vw, 2.5rem)) {
+    .modal-content h2 {
+        font-size: clamp(1.25rem, 3vw, 1.5rem);
     }
 }
