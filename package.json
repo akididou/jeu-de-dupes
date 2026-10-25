@@ -1,7 +1,7 @@
 {
   "name": "jeu-de-dupes",
   "version": "1.0.0",
-  "description": "Application interactive pour découvrir les parfums associés aux personnages du film \"Jeux de Dupes\".",
+  "description": "Borne tablette Jeux de Dupes : un client cherche un parfum de marque et obtient le numéro de notre version (FR/EN, hors ligne).",
   "scripts": {
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",

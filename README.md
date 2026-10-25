@@ -23,9 +23,10 @@ utilisable sans réseau.
 4. **Inactivité** : après 60 s sans contact, un compte à rebours de 10 s s'affiche, puis la borne revient à
    l'accueil, vide la recherche et repasse en français. Le bouton FR/EN change la langue de l'interface.
 
-Un petit point discret en bas à droite de l'écran signale au personnel que la borne utilise la copie de
-secours (réseau ou Sheet indisponible). Les parfums restent consultables, mais les dernières modifications du
-Sheet ne sont pas visibles.
+Un petit point discret en bas à droite de l'écran signale au personnel que la borne n'a pas la liste
+fraîche du Sheet : elle utilise la copie de secours, ou, hors ligne, la dernière liste reçue gardée en cache
+(réseau ou Sheet indisponible). Les parfums restent consultables, mais les dernières modifications du Sheet
+ne sont pas visibles.
 
 ### Installer la borne sur une tablette Android
 
@@ -37,17 +38,27 @@ Sheet ne sont pas visibles.
    quitter l'application.
 5. Garder l'écran allumé : option développeur « Rester activé » pendant la charge, ou un lanceur de borne.
 
-La première visite met le site en cache : ensuite, la borne démarre même sans connexion. Le cache est
-renouvelé à chaque déploiement.
+La première visite met le site en cache : ensuite, la borne démarre même sans connexion. Une borne allumée
+en permanence se met à jour seule : quand elle revient à l'accueil après inactivité, elle recharge la page
+(au plus une fois toutes les 10 minutes), ce qui relit le Sheet et installe une version déployée entre-temps.
+Une nouvelle version est prise au premier rechargement et affichée au retour à l'accueil suivant, sans
+attendre les 10 minutes. Sans réseau, le rechargement repart du cache. Une borne que personne ne touche
+reste sur l'accueil sans recharger : la mise à jour se fait après le passage d'un client.
 
-Pour tester le retour automatique à l'accueil sans attendre, ajouter `?idle=N` à l'adresse (N en secondes,
-par exemple `?idle=15`). C'est une aide de test, pas un réglage de production.
+Aides de test (pas des réglages de production), à ajouter à l'adresse :
+
+- `?idle=N` : retour automatique à l'accueil après N secondes d'inactivité (par exemple `?idle=15`) ;
+- `?reload=N` : intervalle minimal entre deux rechargements, en secondes (`?reload=0` recharge à chaque
+  retour automatique). Les deux se combinent : `?idle=15&reload=0`.
 
 ## Mise à jour du catalogue
 
 Le catalogue vit dans un Google Sheet (identifiant `11QQ55WHs43F2B-M8TdxmKHM42U5h7QoWmHlSBAKt3MI`, premier
-onglet). Modifier le Sheet suffit : la borne le relit en ligne, avec un délai d'environ 5 minutes (cache du
-serveur).
+onglet). Modifier le Sheet suffit : le serveur garde sa réponse 5 minutes en cache, et la borne relit la liste
+quand elle revient à l'accueil après inactivité, au plus toutes les 10 minutes (voir plus haut). Comptez
+donc jusqu'à environ 15 minutes, et un passage de client, avant de voir une modification sur la borne. Si
+le Sheet est momentanément en erreur ou refuse la requête, le serveur continue de servir la dernière liste
+reçue.
 
 | Colonne | Obligatoire | Contenu |
 |---|---|---|
@@ -78,8 +89,11 @@ Règles :
   (colonnes `confiance`, `source` et `remarque`). Ce CSV contient des colonnes de travail
   (`original_identifie`, `confiance`, `source`, `remarque`) que le site ignore. Une fois relues, recopier les notes corrigées dans le Sheet.
 
-La copie de secours `data/parfums.json` est actualisée automatiquement à chaque déploiement
-(`scripts/deploy.sh`) ; on peut aussi la régénérer à la main avec `node scripts/update-fallback.mjs`.
+La copie de secours `data/parfums.json` est relue depuis le Sheet à chaque déploiement (`scripts/deploy.sh`,
+voir plus bas) ; on peut aussi la régénérer à la main avec `node scripts/update-fallback.mjs`. Par sécurité,
+le script refuse d'écrire (fichier inchangé, code de sortie 1) si le Sheet compte moins de 90 % des lignes
+du fichier actuel (Sheet vidé, tronqué ou filtré), ou si le fichier actuel est illisible. L'écriture est
+atomique : jamais de fichier à moitié écrit.
 
 ## Développement local et tests
 
@@ -96,8 +110,9 @@ npm run test:e2e       # parcours Playwright (tablette paysage, portrait, mobile
 Remarques :
 
 - Le navigateur de Playwright s'installe une fois avec `npx playwright install chromium`.
-- En local, `/api/parfums` n'existe pas (c'est un proxy nginx) : le site utilise alors `data/parfums.json`. Les
-  tests de parcours s'appuient sur ce comportement.
+- En local, `/api/parfums` n'existe pas (c'est un proxy nginx) : le site utilise alors `data/parfums.json`.
+  Les tests de parcours, eux, interceptent `/api/parfums` et répondent avec la fixture
+  `tests/e2e/fixtures/parfums.json` (12 parfums).
 - Les tests de parcours sont limités à 2 processus en parallèle, car `http-server` sature au-delà.
 - Les contraintes à respecter : aucun script ni ressource tiers, pas de `style=""` ni de `<script>` inline,
   pas de `innerHTML` avec des données (affichage par `textContent`). La politique CSP du serveur les bloquerait.
@@ -108,15 +123,21 @@ Le site est servi par nginx sur le serveur `jppoizat.fr`, dossier `/home/project
 `nginx/dupes.conf` est lié dans `/etc/nginx/sites-enabled/`.
 
 ```bash
-scripts/deploy.sh          # mise à jour
-scripts/deploy.sh --first  # tout premier déploiement uniquement (config HTTP temporaire + certificat)
+scripts/deploy.sh              # mise à jour
+scripts/deploy.sh --first      # tout premier déploiement uniquement (config HTTP temporaire + certificat)
+scripts/deploy.sh --keep-data  # sans relire le Sheet : data/parfums.json part tel qu'il est dans le commit
 scripts/check-prod.sh      # contrôle du site en ligne (ou : scripts/check-prod.sh https://autre.exemple)
 ```
 
 `deploy.sh` :
 
 - refuse de partir si l'arbre Git a des modifications non validées (commit d'abord) ;
-- met à jour `data/parfums.json` depuis le Sheet (sans bloquer si le Sheet est injoignable) ;
+- relit le Sheet pour actualiser `data/parfums.json`. Si le fichier change, le déploiement **s'arrête sans
+  rien envoyer** : ce qui part en production est toujours exactement un commit. Relire le changement
+  (`git diff data/parfums.json`), le valider avec
+  `git add data/parfums.json && git commit -m "chore: copie de secours du catalogue"`, puis relancer
+  `scripts/deploy.sh`. Si le Sheet est injoignable ou refusé (moins de 90 % des lignes), le fichier validé
+  part tel quel ;
 - n'envoie que les fichiers publics et `nginx/` (liste blanche : `index.html`, `manifest.webmanifest`,
   `sw.js`, `css/`, `js/`, `assets/`, `data/`, `nginx/`), par `tar` et `ssh` ;
 - change la version du cache du service worker, teste la configuration avec `nginx -t`, puis recharge nginx ;
@@ -129,8 +150,10 @@ redirection HTTPS et le TLS. Son code de sortie est le nombre de contrôles en �
 
 - désactiver le site : sur le serveur,
   `rm /etc/nginx/sites-enabled/dupes.conf && nginx -t && systemctl reload nginx` ;
-- ou revenir à une version précédente : `git checkout <commit>` puis `scripts/deploy.sh`, et ensuite
-  revenir sur la branche de travail avec `git switch -` (ou `git switch master`).
+- ou revenir à une version précédente : `git checkout <commit>` puis `scripts/deploy.sh --keep-data`
+  (`--keep-data` déploie la copie de secours de ce commit sans relire le Sheet, sinon le déploiement
+  s'arrêterait sur un fichier modifié), et ensuite revenir sur la branche de travail avec `git switch -`
+  (ou `git switch master`). Les bornes prennent l'ancienne version à leur prochain retour à l'accueil.
 
 Le certificat Let's Encrypt se renouvelle seul (timer certbot). Journaux : `/var/log/nginx/dupes.access.log`
 et `/var/log/nginx/access.log` (ce dernier est surveillé par fail2ban).
@@ -161,9 +184,9 @@ Identifiants). Le code actuel n'utilise aucune clé, et il n'existe plus de fich
 ## Structure du projet
 
 ```
-index.html                 coquille unique : 4 écrans et une boîte de dialogue
+index.html                 coquille unique : 2 écrans (accueil, collection) et 2 boîtes de dialogue (ticket, inactivité)
 manifest.webmanifest       installation plein écran
-sw.js                      service worker : site en cache, réseau d'abord pour /api/parfums
+sw.js                      service worker : site en cache, réseau d'abord pour /api/parfums (copie marquée hors ligne)
 css/style.css              thème et composants
 js/main.js                 point d'entrée : état, navigation, événements
 js/data.js                 chargement, validation, fusion des notes
