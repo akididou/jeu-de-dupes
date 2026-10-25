@@ -7,6 +7,7 @@ import {
   indexNotes,
   loadParfums,
   notesKey,
+  notesKeyStrict,
   parseNotes,
   sanitize,
 } from '../../js/data.js';
@@ -47,11 +48,25 @@ describe('notesKey', () => {
   });
 });
 
+describe('notesKeyStrict', () => {
+  test('ajoute le numéro à la clé souple', () => {
+    expect(notesKeyStrict('Femme', '135', 'La Petite Robe Noire', 'Guerlain')).toBe('femme 135 la petite robe noire guerlain');
+  });
+});
+
 describe('indexNotes', () => {
   test('ne garde que les lignes qui ont une famille', () => {
     const map = indexNotes([ligne({ famille: 'Floral' }), ligne({ nom: 'AUTRE' }), null]);
-    expect(map.size).toBe(1);
-    expect(map.get(notesKey('femme', 'N°5', 'CHANEL')).famille).toBe('Floral');
+    expect(map.size).toBe(2); // une clé stricte et une clé souple pour la seule ligne retenue
+    expect([...map.values()].every((r) => r.famille === 'Floral')).toBe(true);
+  });
+  test('sur la clé souple, la première ligne homonyme l’emporte', () => {
+    const map = indexNotes([
+      ligne({ numero: '135', famille: 'Chypré' }),
+      ligne({ numero: '134', famille: 'Floral' }),
+    ]);
+    expect(map.size).toBe(3);
+    expect(sanitize([ligne({ numero: '999' })], map)[0].famille).toBe('Chypré');
   });
 });
 
@@ -83,6 +98,20 @@ describe('sanitize', () => {
     const notes = indexNotes([ligne({ famille: 'Boisé', sous_famille: 'Sec', notes_tete: ['Cèdre'], notes_coeur: 'Iris', notes_fond: 'Musc' })]);
     const [p] = sanitize([ligne()], notes);
     expect(p).toMatchObject({ famille: 'Boisé', sousFamille: 'Sec', tete: ['Cèdre'], coeur: ['Iris'], fond: ['Musc'] });
+  });
+  test('départage deux homonymes par le numéro', () => {
+    const notes = indexNotes([
+      ligne({ numero: '135', famille: 'Chypré', notes_tete: 'Cerise noire' }),
+      ligne({ numero: '134', famille: 'Floral', notes_tete: 'Citron' }),
+    ]);
+    const [a, b] = sanitize([ligne({ numero: '135' }), ligne({ numero: '134' })], notes);
+    expect(a).toMatchObject({ famille: 'Chypré', tete: ['Cerise noire'] });
+    expect(b).toMatchObject({ famille: 'Floral', tete: ['Citron'] });
+  });
+  test('retombe sur la clé souple quand le numéro a changé', () => {
+    const notes = indexNotes([ligne({ numero: '135', famille: 'Chypré', notes_tete: 'Cerise noire' })]);
+    const [p] = sanitize([ligne({ numero: '200' })], notes);
+    expect(p).toMatchObject({ famille: 'Chypré', tete: ['Cerise noire'] });
   });
   test('construit l’index de recherche', () => {
     const [p] = sanitize([ligne({ famille: 'Floral', notes_coeur: 'Rose' })], new Map());

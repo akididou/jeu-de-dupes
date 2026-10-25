@@ -31,6 +31,18 @@ export function notesKey(categorie, nom, marque) {
 }
 
 /**
+ * Clé stricte : ajoute le numéro pour départager les homonymes (même catégorie, nom et marque).
+ * @param {string} categorie
+ * @param {string} numero
+ * @param {string} nom
+ * @param {string} marque
+ * @returns {string}
+ */
+export function notesKeyStrict(categorie, numero, nom, marque) {
+  return normalize(`${categorie} ${numero} ${nom} ${marque}`);
+}
+
+/**
  * Colonnes du Sheet : « Bergamote, Poivre » ; tableau possible dans la copie de secours.
  * @param {string | string[] | undefined} value
  * @returns {string[]}
@@ -43,6 +55,12 @@ export function parseNotes(value) {
     .slice(0, MAX_NOTES);
 }
 
+// L'index des notes est une Map qui contient deux entrées par ligne : une clé stricte
+// (avec numéro, préfixe « s| ») et une clé souple (sans numéro, préfixe « l| »). Les préfixes
+// évitent toute collision entre les deux. Sur la clé souple, la première ligne l'emporte.
+const STRICT_PREFIX = 's|';
+const LOOSE_PREFIX = 'l|';
+
 /**
  * @param {unknown[]} rows
  * @returns {Map<string, object>}
@@ -52,13 +70,24 @@ export function indexNotes(rows) {
   if (!Array.isArray(rows)) return map;
   for (const row of rows) {
     if (!row || typeof row !== 'object' || !row.famille) continue;
-    map.set(notesKey(row.categorie || '', row.nom || '', row.marque || ''), row);
+    const { categorie = '', numero = '', nom = '', marque = '' } = row;
+    map.set(STRICT_PREFIX + notesKeyStrict(categorie, numero, nom, marque), row);
+    const loose = LOOSE_PREFIX + notesKey(categorie, nom, marque);
+    if (!map.has(loose)) map.set(loose, row);
   }
   return map;
 }
 
-function olfactif(row, notes, key) {
-  const source = row.famille ? row : notes.get(key) || {};
+function findNotes(notes, categorie, numero, nom, marque) {
+  return (
+    notes.get(STRICT_PREFIX + notesKeyStrict(categorie, numero, nom, marque)) ||
+    notes.get(LOOSE_PREFIX + notesKey(categorie, nom, marque)) ||
+    {}
+  );
+}
+
+function olfactif(row, notes, ids) {
+  const source = row.famille ? row : findNotes(notes, ...ids);
   const famille = String(source.famille || '').trim();
   return {
     famille: FAMILLES.includes(famille) ? famille : '',
@@ -77,7 +106,7 @@ function toParfum(row, notes) {
   const marque = String(row.marque || '').trim();
   if (!CATEGORIES.includes(categorie) || !numero || !nom || !marque) return [];
   if (nom.length > MAX_NOM_LENGTH || marque.length > MAX_MARQUE_LENGTH || numero.length > MAX_NUMERO_LENGTH) return [];
-  const olf = olfactif(row, notes, notesKey(categorie, nom, marque));
+  const olf = olfactif(row, notes, [categorie, numero, nom, marque]);
   return [{ categorie, numero, nom, marque, ...olf, index: buildIndex({ nom, marque, ...olf }) }];
 }
 
