@@ -12,8 +12,11 @@ const P = [
   make('3', 'EAU SAUVAGE', 'DIOR', { famille: 'Hespéridé' }),
   make('127', 'COCO MADEMOISELLE', 'CHANEL', { famille: 'Oriental', fond: ['Patchouli'] }),
   make('4', 'COCO NOIR', 'CHANEL', { famille: 'Oriental' }),
-  make('5', 'SHALIMAR', 'GUERLAIN', { famille: 'Oriental', sousFamille: 'Vanillé', fond: ['Vanille'] }),
+  make('5', 'SHALIMAR', 'GUERLAIN', { famille: 'Oriental', fond: ['Vanille'] }),
   make('6', 'COCO', 'AUTRE MARQUE'),
+  make('9', 'LE 127', 'ADAM'),
+  make('7', 'AAA LUNE', 'ZETA'),
+  make('8', 'YYY LUNE', 'ALPHA'),
 ];
 
 describe('normalize', () => {
@@ -57,8 +60,10 @@ describe('search', () => {
     expect(noms).toContain('SAUVAGE');
     expect(noms).toContain('EAU SAUVAGE');
   });
-  test('un numéro exact arrive en premier', () => {
-    expect(search('127', P)[0].numero).toBe('127');
+  test('un numéro exact passe devant un nom contenant ce nombre', () => {
+    const res = search('127', P);
+    expect(res.map((p) => p.nom)).toContain('LE 127');
+    expect(res[0].numero).toBe('127');
   });
   test('trouve par note de fond uniquement', () => {
     const noms = search('vanille', P).map((p) => p.nom);
@@ -74,6 +79,9 @@ describe('search', () => {
   });
   test('requête sans correspondance renvoie []', () => {
     expect(search('zzzz', P)).toEqual([]);
+  });
+  test('à score égal, trie par marque avant le nom', () => {
+    expect(search('lune', P).map((p) => p.marque)).toEqual(['ALPHA', 'ZETA']);
   });
   test('bonus nom exact et tri marque puis nom à score égal', () => {
     const res = search('coco', P);
