@@ -64,15 +64,19 @@ serveur).
 Règles :
 
 - Les titres de colonnes sont exactement ceux ci-dessus, en minuscules, sans accent.
-- Une note fait 40 caractères au plus, et chaque étage (tête, cœur, fond) 8 notes au plus.
-- Les lignes invalides (catégorie inconnue, champ obligatoire vide, texte trop long) sont ignorées.
+- Une ligne est ignorée si la catégorie est inconnue, si un champ obligatoire est vide, ou si `nom`
+  (200), `marque` (100) ou `numero` (10) dépasse sa longueur maximale.
+- Pour les notes, le parfum reste affiché : une note de plus de 40 caractères est écartée, au-delà de 8 notes
+  par étage (tête, cœur, fond) les suivantes sont ignorées, et `sous_famille` est coupée à 60 caractères.
 - Les données olfactives vont ensemble : si `famille` est renseignée sur une ligne du Sheet, famille,
   sous-famille et notes de cette ligne viennent du Sheet (une cellule de notes vide reste vide). Si `famille`
-  est vide, le parfum reprend tout le bloc de la copie de secours (correspondance sur catégorie, numéro, nom
-  et marque, sans accents ni casse).
+  est vide, le parfum reprend tout le bloc de la copie de secours (la correspondance se fait d'abord sur
+  catégorie, numéro, nom et marque ; à défaut, sur catégorie, nom et marque sans le numéro ; sans accents ni
+  casse).
 - Les 188 parfums sont livrés avec leurs notes dans `data/parfums.json`. Ces notes viennent d'une recherche
   web et **46 lignes sont marquées « à vérifier »** : voir `docs/notes-olfactives-a-relire.csv`
-  (colonnes `confiance`, `source` et `remarque`). Une fois relues, recopier les notes corrigées dans le Sheet.
+  (colonnes `confiance`, `source` et `remarque`). Ce CSV contient des colonnes de travail
+  (`original_identifie`, `confiance`, `source`, `remarque`) que le site ignore. Une fois relues, recopier les notes corrigées dans le Sheet.
 
 La copie de secours `data/parfums.json` est actualisée automatiquement à chaque déploiement
 (`scripts/deploy.sh`) ; on peut aussi la régénérer à la main avec `node scripts/update-fallback.mjs`.
@@ -125,7 +129,8 @@ redirection HTTPS et le TLS. Son code de sortie est le nombre de contrôles en �
 
 - désactiver le site : sur le serveur,
   `rm /etc/nginx/sites-enabled/dupes.conf && nginx -t && systemctl reload nginx` ;
-- ou revenir à une version précédente : `git checkout <commit>` puis `scripts/deploy.sh`.
+- ou revenir à une version précédente : `git checkout <commit>` puis `scripts/deploy.sh`, et ensuite
+  revenir sur la branche de travail avec `git switch -` (ou `git switch master`).
 
 Le certificat Let's Encrypt se renouvelle seul (timer certbot). Journaux : `/var/log/nginx/dupes.access.log`
 et `/var/log/nginx/access.log` (ce dernier est surveillé par fail2ban).
@@ -137,8 +142,8 @@ Site statique : pas de formulaire, pas de compte, aucune écriture côté serveu
 - **Liste blanche nginx** : seuls `/`, `/index.html`, `/manifest.webmanifest`, `/sw.js`, `/css/`, `/js/`,
   `/assets/`, `/data/parfums.json` et `/api/parfums` répondent ; le reste renvoie 404, sans listage de dossiers.
 - **Méthodes** GET et HEAD uniquement (405 sinon), corps de requête limité à 1 ko.
-- **Limitation de débit** par IP (429 au-delà) : 10 requêtes/s avec une marge de 40, 20 connexions, et
-  30 requêtes/minute sur `/api/parfums`.
+- **Limitation de débit** par IP (429 au-delà) : 10 requêtes/s avec une marge de 100, 20 connexions, et
+  30 requêtes/minute (marge de 20) sur `/api/parfums`.
 - **TLS** 1.2 et 1.3, HTTP redirigé vers HTTPS, HSTS.
 - **En-têtes** : CSP stricte (`default-src 'none'`, scripts, styles, polices, images et connexions limités à
   `'self'`), `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`,
