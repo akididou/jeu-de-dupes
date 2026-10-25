@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Déploiement de « Jeux de Dupes » sur https://dupes.jppoizat.fr
-# Usage : scripts/deploy.sh [--first]
-#   --first : premier déploiement (config HTTP temporaire, certificat Let's Encrypt, lien nginx).
+# Usage : scripts/deploy.sh [--first] [--keep-data]
+#   --first     : premier déploiement (config HTTP temporaire, certificat Let's Encrypt, lien nginx).
+#   --keep-data : ne pas relire le Sheet ; data/parfums.json part tel qu'il est dans le commit
+#                 (retour à une version précédente).
 #
 # Seuls les fichiers publics et nginx/ partent sur le serveur (liste blanche ci-dessous), par tar + ssh.
 # Rien n'est modifié dans l'arbre de travail : __VERSION__ n'est remplacé que dans une copie temporaire.
@@ -14,11 +16,14 @@ SITE_DIR="/home/projects/jeu-de-dupes"
 WHITELIST=(index.html manifest.webmanifest sw.js css js assets data nginx)
 
 FIRST=0
-case "${1:-}" in
-  "") ;;
-  --first) FIRST=1 ;;
-  *) echo "Usage : $0 [--first]" >&2; exit 2 ;;
-esac
+KEEP_DATA=0
+for arg in "$@"; do
+  case "$arg" in
+    --first) FIRST=1 ;;
+    --keep-data) KEEP_DATA=1 ;;
+    *) echo "Usage : $0 [--first] [--keep-data]" >&2; exit 2 ;;
+  esac
+done
 
 step() { printf '\n==> %s\n' "$*"; }
 die() { printf 'ERREUR : %s\n' "$*" >&2; exit 1; }
@@ -46,11 +51,21 @@ COMMIT="$(git rev-parse --short HEAD)"
 echo "Commit déployé : $COMMIT"
 
 # ── 2. Copie de secours des données ───────────────────────────────────────────
-step "2/6 Mise à jour de data/parfums.json (non bloquant)"
-if node scripts/update-fallback.mjs; then
-  git diff --quiet -- data/parfums.json || echo "data/parfums.json a changé : pensez à le valider (commit)."
+# Ce qui part en production doit être exactement le commit : une copie de secours modifiée
+# par le Sheet est d'abord relue et validée, puis le déploiement est relancé.
+step "2/6 Mise à jour de data/parfums.json depuis le Sheet"
+if [ "$KEEP_DATA" = 1 ]; then
+  echo "--keep-data : data/parfums.json du commit, sans relire le Sheet."
+elif node scripts/update-fallback.mjs; then
+  if ! git diff --quiet -- data/parfums.json; then
+    git --no-pager diff --stat -- data/parfums.json >&2
+    die "data/parfums.json a changé depuis le Sheet. Rien n'a été envoyé.
+  Relisez le changement : git diff data/parfums.json
+  Validez-le :            git add data/parfums.json && git commit -m \"chore: copie de secours du catalogue\"
+  Puis relancez :         scripts/deploy.sh"
+  fi
 else
-  echo "Mise à jour impossible : on garde le fichier actuel."
+  echo "Mise à jour impossible (Sheet injoignable ou refusé) : on garde le fichier validé."
 fi
 
 # ── 3. Construction de l'archive ──────────────────────────────────────────────
@@ -58,7 +73,7 @@ step "3/6 Construction de l'archive (liste blanche : ${WHITELIST[*]})"
 VERSION="${COMMIT}-$(date -u +%Y%m%d%H%M%S)"
 STAGE="$WORK/stage"
 mkdir "$STAGE"
-# Fichiers suivis par Git uniquement (version de travail, donc avec la copie de secours à jour).
+# Fichiers suivis par Git uniquement ; l'arbre est propre (étapes 1 et 2), donc identique au commit.
 git ls-files -z -- "${WHITELIST[@]}" | tar --null -T - -cf - | tar -xf - -C "$STAGE"
 # Fins de ligne LF dans les fichiers texte (git peut les avoir converties en CRLF sous Windows).
 find "$STAGE" -type f \( -name '*.html' -o -name '*.js' -o -name '*.css' -o -name '*.json' \
@@ -123,7 +138,13 @@ finish() {
     echo "ERREUR ou interruption (code $rc) : retour arrière." >&2
     rm -f "$BOOT"
     if [ "$LINK_CREATED" = 1 ]; then rm -f "$LINK"; fi
-    if [ "$SWAPPED" = 1 ]; then restore_site; fi
+    if [ "$SWAPPED" = 1 ]; then
+      restore_site
+    elif [ ! -d "$SITE" ] && [ -d "$OLD" ]; then
+      # Signal reçu entre « mv SITE OLD » et SWAPPED=1 : l'ancien dossier revient à sa place.
+      say "remise en place de l'ancien dossier"
+      mv "$OLD" "$SITE"
+    fi
     rm -rf "$NEW"
     if [ "$SWAPPED" = 1 ] || [ "$NGINX_TOUCHED" = 1 ]; then
       reload_nginx || echo "ATTENTION : nginx n'a pas pu être rechargé après le retour arrière." >&2

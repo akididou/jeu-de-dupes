@@ -38,7 +38,7 @@ headers_of() {
 header_value() {
   local name="$1"
   shift
-  curl "${CURL_OPTS[@]}" -D - -o /dev/null "$@" 2>/dev/null | tr -d ''     | sed -n "s/^$name: *//Ip" | head -n 1
+  curl "${CURL_OPTS[@]}" -D - -o /dev/null "$@" 2>/dev/null | tr -d '\r' | sed -n "s/^$name: *//Ip" | head -n 1
 }
 
 expect_status() {
