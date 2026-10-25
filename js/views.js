@@ -4,22 +4,17 @@
 import { FAMILLES } from './data.js';
 import { prettyBrand } from './format.js';
 import { translate } from './i18n.js';
-import { normalize, search } from './search.js';
+import { hasQuery, normalize, search } from './search.js';
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
 /**
  * @typedef {{lang: string, univers: string|null, query: string, brand: string|null,
- *   famille: string|null, railMode: 'marques'|'familles'}} State
+ *   famille: string|null, railMode: 'marques'|'familles', unavailable: boolean}} State
  * @typedef {{selectBrand: (marque: string|null) => void, selectFamille: (famille: string|null) => void,
  *   clearQuery: () => void, showTicket: (parfum: object) => void}} Actions
  */
-
-/** Vrai si la recherche contient au moins un caractère cherchable (pas seulement espaces ou ponctuation). */
-export function hasQuery(query) {
-  return normalize(query) !== '';
-}
 
 function el(tag, className, text) {
   const node = document.createElement(tag);
@@ -87,9 +82,9 @@ function renderRail(state, scope, actions) {
   const tabs = $('#rail-tabs');
   rail.replaceChildren();
   const searching = hasQuery(state.query);
-  rail.hidden = searching;
+  rail.hidden = searching || !scope.length;
   tabs.hidden = searching || !scope.some((p) => p.famille);
-  if (searching) return;
+  if (rail.hidden) return;
 
   const t = (key) => translate(state.lang, key);
   const mode = effectiveRailMode(state, scope);
@@ -174,6 +169,15 @@ function renderBrowse(state, scope, actions) {
   });
 }
 
+/** Ni API ni copie de secours : un message pour le visiteur plutôt qu'une liste vide. */
+function renderUnavailable(state) {
+  $('#list-title').textContent = universTitles(state.lang)[state.univers];
+  $('#list-count').textContent = '';
+  const empty = el('div', 'empty');
+  empty.append(el('p', '', translate(state.lang, 'unavailable')));
+  $('#results').append(empty);
+}
+
 /**
  * Écran collection : sélecteur d'univers, rail de filtres et résultats.
  * @param {State} state
@@ -188,7 +192,8 @@ export function renderList(state, parfums, actions) {
   $$('.segmented button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.univers === state.univers)));
   $('[data-clear]').hidden = !state.query;
 
-  if (hasQuery(state.query)) renderSearch(state, parfums, scope, actions);
+  if (state.unavailable) renderUnavailable(state);
+  else if (hasQuery(state.query)) renderSearch(state, parfums, scope, actions);
   else renderBrowse(state, scope, actions);
 }
 

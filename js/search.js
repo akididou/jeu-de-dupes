@@ -25,6 +25,15 @@ export function normalize(text) {
 }
 
 /**
+ * Vrai si la recherche contient au moins un caractère cherchable (pas seulement espaces ou ponctuation).
+ * @param {string} query
+ * @returns {boolean}
+ */
+export function hasQuery(query) {
+  return normalize(query) !== '';
+}
+
+/**
  * @param {{nom: string, marque: string, famille: string, sousFamille: string,
  *   tete: string[], coeur: string[], fond: string[]}} p
  * @returns {{words: string[], compact: string, nomCompact: string, noteWords: string[]}}

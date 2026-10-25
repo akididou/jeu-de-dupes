@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { buildIndex, levenshtein, normalize, search } from '../../js/search.js';
+import { buildIndex, hasQuery, levenshtein, normalize, search } from '../../js/search.js';
 
 const make = (numero, nom, marque, extra = {}) => {
   const base = { famille: '', sousFamille: '', tete: [], coeur: [], fond: [], ...extra };
@@ -87,5 +87,19 @@ describe('search', () => {
     const res = search('coco', P);
     expect(res[0].nom).toBe('COCO');
     expect(res.map((p) => p.nom)).toEqual(['COCO', 'COCO MADEMOISELLE', 'COCO NOIR']);
+  });
+});
+
+describe('hasQuery', () => {
+  test('vrai dès qu’un caractère est cherchable (lettre, chiffre, accent)', () => {
+    expect(hasQuery('Sauvage')).toBe(true);
+    expect(hasQuery('  342 ')).toBe(true);
+    expect(hasQuery('é')).toBe(true);
+  });
+
+  test('faux pour une recherche vide, faite d’espaces ou de ponctuation', () => {
+    expect(hasQuery('')).toBe(false);
+    expect(hasQuery('  -- ')).toBe(false);
+    expect(hasQuery("'’.,!?")).toBe(false);
   });
 });

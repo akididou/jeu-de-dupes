@@ -3,7 +3,8 @@
 import { loadParfums } from './data.js';
 import { translate } from './i18n.js';
 import { createIdleTimer } from './idle.js';
-import { hasQuery, openTicket, renderList, renderTexts } from './views.js';
+import { hasQuery } from './search.js';
+import { openTicket, renderList, renderTexts } from './views.js';
 
 const DEFAULT_IDLE_SECONDS = 60;
 const MAX_IDLE_WARNING_SECONDS = 10;
@@ -11,7 +12,7 @@ const MAX_IDLE_WARNING_SECONDS = 10;
 const TICKET_BACKDROP_GUARD_MS = 500;
 
 const INITIAL_STATE = Object.freeze({
-  lang: 'fr', univers: null, query: '', brand: null, famille: null, railMode: 'marques',
+  lang: 'fr', univers: null, query: '', brand: null, famille: null, railMode: 'marques', unavailable: false,
 });
 
 let state = INITIAL_STATE;
@@ -34,18 +35,26 @@ function idleSettings(search) {
 const idle = createIdleTimer({
   ...idleSettings(location.search),
   isActive: () => state.univers !== null || Boolean(state.query) || $('#ticket').open || state.lang !== 'fr',
+  // L'avertissement est un <dialog> modal : il passe au-dessus du ticket et reste cliquable.
   onWarn: (remaining) => {
     $('#idle-text').textContent = translate(state.lang, 'idle')(remaining);
-    $('#idle').hidden = false;
+    const warning = $('#idle');
+    if (!warning.open) warning.showModal();
   },
   onExpire: () => {
+    closeIdleWarning();
     state = { ...state, lang: 'fr' };
     goHome();
   },
 });
 
+function closeIdleWarning() {
+  const warning = $('#idle');
+  if (warning.open) warning.close();
+}
+
 function resetIdle() {
-  $('#idle').hidden = true;
+  closeIdleWarning();
   idle.reset();
 }
 
@@ -92,7 +101,7 @@ function setQuery(query) {
 }
 
 function goHome() {
-  state = { ...INITIAL_STATE, lang: state.lang };
+  state = { ...INITIAL_STATE, lang: state.lang, unavailable: state.unavailable };
   const dialog = $('#ticket');
   if (dialog.open) dialog.close();
   if (document.activeElement) document.activeElement.blur();
@@ -153,8 +162,9 @@ async function init() {
     parfums = loaded.parfums;
     $('#data-dot').hidden = !loaded.backup;
   } catch {
-    // Ni API ni copie de secours : la borne reste utilisable (listes vides), le point prévient le personnel.
+    // Ni API ni copie de secours : la liste affiche un message au visiteur, le point prévient le personnel.
     parfums = [];
+    state = { ...state, unavailable: true };
     $('#data-dot').hidden = false;
   }
   render();

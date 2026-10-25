@@ -693,15 +693,17 @@ button {
 
 /* ---------- Inactivité ---------- */
 
+/* <dialog> modal : passe au-dessus du ticket (couche supérieure), carte en bas d'écran */
 .idle {
-    position: fixed;
-    inset: 0;
-    z-index: 50;
-    display: grid;
-    place-items: end center;
-    padding: 0 16px max(28px, env(safe-area-inset-bottom));
-    background: rgba(26, 6, 11, .55);
+    margin: auto auto max(28px, env(safe-area-inset-bottom));
+    max-width: calc(100vw - 32px);
+    border: 0;
+    padding: 0;
+    background: transparent;
+    overflow: visible;
 }
+
+.idle::backdrop { background: rgba(26, 6, 11, .55); }
 
 .idle-card {
     display: flex;

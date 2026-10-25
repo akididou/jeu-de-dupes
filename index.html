@@ -108,12 +108,12 @@
 </dialog>
 
 <!-- Retour accueil automatique -->
-<div class="idle" id="idle" hidden role="alertdialog" aria-live="assertive">
+<dialog class="idle" id="idle" role="alertdialog" aria-labelledby="idle-text">
     <div class="idle-card">
-        <p id="idle-text"></p>
+        <p id="idle-text" aria-live="assertive"></p>
         <button type="button" data-idle-continue data-i18n="continue">Continuer</button>
     </div>
-</div>
+</dialog>
 
 <script type="module" src="js/main.js"></script>
 </body>

@@ -107,25 +107,56 @@ test('?idle=3 : retour à l\'accueil en français après inactivité', async ({ 
   await page.locator('#screen-home [data-univers="femme"]').click();
   await expect(page.locator('#screen-list')).toBeVisible();
 
-  await page.waitForTimeout(4000);
-  await expect(page.locator('#screen-home')).toBeVisible();
+  await expect(page.locator('#idle')).toBeVisible();
+  await expect(page.locator('#screen-home')).toBeVisible({ timeout: 5000 });
   await expect(page.locator('#screen-list')).toBeHidden();
   await expect(page.locator('#idle')).toBeHidden();
   await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
   await expect(page.locator('#home-title')).toHaveText('Quel parfum aimez-vous ?');
 });
 
+test('?idle=3 : l\'avertissement passe au-dessus du ticket et reste cliquable', async ({ page }) => {
+  await openHome(page, '?idle=3');
+  await page.locator('#screen-home [data-univers="femme"]').click();
+  await row(page, '46').click();
+  await expect(page.locator('#ticket')).toBeVisible();
+
+  const idle = page.locator('#idle');
+  await expect(page.locator('[data-idle-continue]')).toBeVisible();
+  await expect(idle).toHaveAccessibleName(/Retour à l’accueil dans \d+ s/);
+  await page.locator('[data-idle-continue]').click();
+  await expect(idle).toBeHidden();
+  await expect(page.locator('#ticket')).toBeVisible();
+  await expect(page.locator('#ticket-num')).toHaveText('46');
+
+  // Sans nouvelle action, l'expiration ferme les deux et revient à l'accueil.
+  await expect(page.locator('#screen-home')).toBeVisible({ timeout: 6000 });
+  await expect(page.locator('dialog[open]')).toHaveCount(0);
+});
+
 test('un double clic rapide n\'ouvre qu\'un seul ticket, sans erreur', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__showModalCalls = [];
+    const original = HTMLDialogElement.prototype.showModal;
+    HTMLDialogElement.prototype.showModal = function showModal() {
+      window.__showModalCalls.push(this.id);
+      return original.call(this);
+    };
+  });
+  const ticketCalls = () => page.evaluate(() => window.__showModalCalls.filter((id) => id === 'ticket').length);
+
   await openElle(page);
   await row(page, '46').dblclick();
   await expect(page.locator('#ticket')).toBeVisible();
   await expect(page.locator('dialog[open]')).toHaveCount(1);
+  expect(await ticketCalls()).toBe(1);
 
-  // Deux appels synchrones : le second ne doit ni lever d'erreur ni rouvrir le ticket.
+  // Deux appels synchrones : le second ne doit ni lever d'erreur ni rappeler showModal.
   await page.locator('[data-close-ticket]').click();
   await row(page, '193').evaluate((btn) => { btn.click(); btn.click(); });
   await expect(page.locator('#ticket-num')).toHaveText('193');
   await expect(page.locator('dialog[open]')).toHaveCount(1);
+  expect(await ticketCalls()).toBe(2);
 });
 
 test('une recherche faite d\'espaces et de tirets n\'affiche pas « Aucun parfum »', async ({ page }) => {
@@ -142,10 +173,10 @@ test('une recherche faite d\'espaces et de tirets n\'affiche pas « Aucun parfum
 
 test('le ticket d\'un nom long ne crée pas de défilement horizontal', async ({ page }) => {
   await openHome(page);
-  await page.locator('#home-search').fill('smocking');
-  await page.locator('#results .parfum', { hasText: 'ROUGE SMOCKING EXTRAIT' }).click();
+  await page.locator('#home-search').fill('majesty');
+  await page.locator('#results .parfum', { hasText: 'FLEUR MAJESTY ROSE ROYALE' }).click();
   await expect(page.locator('#ticket')).toBeVisible();
-  await expect(page.locator('#ticket-num')).toHaveText('677');
+  await expect(page.locator('#ticket-num')).toHaveText('648');
 
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(overflow).toBeLessThanOrEqual(0);
@@ -175,6 +206,27 @@ test('les zones tactiles de la collection font au moins 48 px', async ({ page })
       .map(({ b, r }) => `${b.className || b.textContent.trim()} ${Math.round(r.width)}×${Math.round(r.height)}`);
   }, MIN_TAP_PX);
   expect(small).toEqual([]);
+});
+
+test('sans API ni copie de secours, la collection affiche un message au visiteur', async ({ page }) => {
+  await page.route('**/api/parfums', (route) => route.fulfill({ status: 500, body: 'erreur' }));
+  await page.route('**/data/parfums.json', (route) => route.fulfill({ status: 404, body: 'absent' }));
+  await page.goto('/');
+  await expect(page.locator('#data-dot')).toBeVisible();
+
+  await page.locator('#screen-home [data-univers="femme"]').click();
+  await expect(page.locator('#results .empty')).toHaveText(
+    'La collection est momentanément indisponible. Demandez à un conseiller.');
+  await expect(page.locator('#brand-rail')).toBeHidden();
+  await page.locator('#list-search').fill('sauvage');
+  await expect(page.locator('#results .empty')).toContainText('momentanément indisponible');
+
+  await page.locator('[data-lang-toggle]').last().click();
+  await expect(page.locator('#results .empty')).toContainText('temporarily unavailable');
+
+  // Les deux échecs réseau voulus apparaissent en console ; aucune autre erreur n'est admise.
+  problems = problems.filter((p) => !p.startsWith('console: Failed to load resource'));
+  expect(problems.filter((p) => p.startsWith('pageerror'))).toEqual([]);
 });
 
 test('aucune violation CSP ni erreur console sur tout le parcours', async ({ page }) => {

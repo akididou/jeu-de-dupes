@@ -16,6 +16,11 @@ describe('translate', () => {
     expect(translate('fr', 'familles').Hespéridé).toBe('Agrumes');
   });
 
+  test('a un message pour une collection indisponible, en français et en anglais', () => {
+    expect(translate('fr', 'unavailable')).toBe('La collection est momentanément indisponible. Demandez à un conseiller.');
+    expect(translate('en', 'unavailable')).toBe('The collection is temporarily unavailable. Please ask a sales associate.');
+  });
+
   test('retombe sur le français pour une langue inconnue', () => {
     expect(translate('de', 'elle')).toBe('Elle');
   });
