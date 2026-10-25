@@ -1,220 +1,176 @@
-# 🎭 Jeu de Dupes - Parfums des Personnages
+# Jeux de Dupes : borne de recherche de parfums
 
-Application interactive pour découvrir les parfums associés aux personnages du film "Jeux de Dupes".
+Borne en libre-service pour la boutique. Un client indique un parfum de marque qu'il connaît (ou parcourt les
+collections Elle / Lui) et obtient le numéro de notre version « dupe » correspondante, avec les notes
+olfactives du parfum original. Elle tourne sur une tablette Android, fonctionne aussi sur mobile, et reste
+utilisable sans réseau.
 
----
+- Site en ligne : <https://dupes.jppoizat.fr>
+- Technique : HTML, CSS et modules JavaScript natifs, service worker. Aucune compilation, aucune dépendance
+  livrée en production (`package.json` ne contient que des outils de développement).
+- Spécification détaillée : `docs/superpowers/specs/2026-10-25-refonte-borne-dupes-design.md`.
 
-## 📊 Scores de Qualité
+## Utilisation en boutique
 
-| Catégorie | Score | Statut |
-|-----------|-------|--------|
-| **Sécurité** | 85/100 | ✅ Excellent |
-| **Accessibilité** | 90/100 | ✅ Excellent |
-| **Responsive** | 88/100 | ✅ Excellent |
-| **Score global** | **88/100** | ✅ Production-ready |
+### Parcours client
 
----
+1. **Accueil** : touchez « Elle » ou « Lui » (avec le nombre de parfums), ou tapez un parfum ou une marque.
+2. **Collection** : parfums groupés par marque ou filtrés par famille olfactive. La recherche tolère les
+   accents, la casse et une faute de frappe (mots de 4 lettres ou plus). Si rien n'est trouvé dans l'univers
+   choisi, la borne cherche dans toute la collection et l'indique.
+3. **Fiche (ticket)** : « Notre version n°X », notes de tête, de cœur et de fond de l'original, et un message
+   invitant à montrer le ticket à un conseiller.
+4. **Inactivité** : après 60 s sans contact, un compte à rebours de 10 s s'affiche, puis la borne revient à
+   l'accueil, vide la recherche et repasse en français. Le bouton FR/EN change la langue de l'interface.
 
-## 🚀 Fonctionnalités
+Un petit point discret en bas à droite de l'écran signale au personnel que la borne utilise la copie de
+secours (réseau ou Sheet indisponible). Les parfums restent consultables, mais les dernières modifications du
+Sheet ne sont pas visibles.
 
-- ✅ Interface interactive avec zones cliquables sur l'affiche
-- ✅ Modales responsive pour afficher les collections de parfums
-- ✅ Tri automatique par marque et nom
-- ✅ Chargement dynamique depuis Google Sheets
-- ✅ Navigation complète au clavier
-- ✅ Support lecteurs d'écran (NVDA/JAWS/VoiceOver)
-- ✅ Responsive mobile/tablette/desktop
-- ✅ Support zoom 200%
-- ✅ Animations respectueuses (prefers-reduced-motion)
+### Installer la borne sur une tablette Android
 
----
+1. Ouvrir <https://dupes.jppoizat.fr> dans Chrome.
+2. Menu de Chrome, puis « Installer l'application » (ou « Ajouter à l'écran d'accueil »).
+3. Lancer la borne depuis l'icône ainsi créée : elle s'ouvre en plein écran, sans barre d'adresse.
+4. Activer l'épinglage d'écran d'Android : Paramètres, Sécurité, « Épingler l'application » (le nom varie selon
+   le fabricant), puis épingler la borne depuis l'écran des applications récentes. Les clients ne peuvent plus
+   quitter l'application.
+5. Garder l'écran allumé : option développeur « Rester activé » pendant la charge, ou un lanceur de borne.
 
-## 🔒 Sécurité
+La première visite met le site en cache : ensuite, la borne démarre même sans connexion. Le cache est
+renouvelé à chaque déploiement.
 
-- ✅ **Aucune clé API exposée** - Utilisation de l'API publique opensheet.elk.sh
-- ✅ **Protection XSS** - Sanitisation complète avec createElement/textContent
-- ✅ **Content Security Policy** - Protection contre injections
-- ✅ **Validation des données** - Filtrage strict des données API
-- ✅ **Gestion d'erreurs** - Messages accessibles, pas d'exposition de détails techniques
+Pour tester le retour automatique à l'accueil sans attendre, ajouter `?idle=N` à l'adresse (N en secondes,
+par exemple `?idle=15`). C'est une aide de test, pas un réglage de production.
 
----
+## Mise à jour du catalogue
 
-## ♿ Accessibilité (WCAG 2.2 Level AA)
+Le catalogue vit dans un Google Sheet (identifiant `11QQ55WHs43F2B-M8TdxmKHM42U5h7QoWmHlSBAKt3MI`, premier
+onglet). Modifier le Sheet suffit : la borne le relit en ligne, avec un délai d'environ 5 minutes (cache du
+serveur).
 
-- ✅ **Navigation au clavier** - Tab, Enter, Espace, Échap
-- ✅ **Focus visible** - Outline 3px sur tous les éléments interactifs
-- ✅ **Focus trap** - Piégeage du focus dans les modales
-- ✅ **Skip-to-content** - Lien pour sauter au contenu principal
-- ✅ **ARIA complet** - Rôles, labels, live regions
-- ✅ **Touch targets** - Minimum 44x44px pour mobile
-- ✅ **Annonces dynamiques** - aria-live pour changements
-- ✅ **Lecteurs d'écran** - Support complet
-- ✅ **Zoom 200%** - Layout préservé
+| Colonne | Obligatoire | Contenu |
+|---|---|---|
+| `categorie` | oui | `femme` ou `homme` |
+| `numero` | oui | numéro de notre version (10 caractères max) |
+| `nom` | oui | nom du parfum original (200 max) |
+| `marque` | oui | marque de l'original (100 max) |
+| `famille` | non | une valeur parmi : Hespéridé, Aquatique, Aromatique, Floral, Chypré, Boisé, Ambré, Gourmand, Cuir, Musqué |
+| `sous_famille` | non | texte libre, affiché sur la fiche |
+| `notes_tete` | non | notes séparées par des virgules, ex. `Bergamote, Citron, Poivre` |
+| `notes_coeur` | non | idem |
+| `notes_fond` | non | idem |
 
----
+Règles :
 
-## 📱 Responsive Design
+- Les titres de colonnes sont exactement ceux ci-dessus, en minuscules, sans accent.
+- Une note fait 40 caractères au plus, et chaque étage (tête, cœur, fond) 8 notes au plus.
+- Les lignes invalides (catégorie inconnue, champ obligatoire vide, texte trop long) sont ignorées.
+- Les données olfactives vont ensemble : si `famille` est renseignée sur une ligne du Sheet, famille,
+  sous-famille et notes de cette ligne viennent du Sheet (une cellule de notes vide reste vide). Si `famille`
+  est vide, le parfum reprend tout le bloc de la copie de secours (correspondance sur catégorie, numéro, nom
+  et marque, sans accents ni casse).
+- Les 188 parfums sont livrés avec leurs notes dans `data/parfums.json`. Ces notes viennent d'une recherche
+  web et **46 lignes sont marquées « à vérifier »** : voir `docs/notes-olfactives-a-relire.csv`
+  (colonnes `confiance`, `source` et `remarque`). Une fois relues, recopier les notes corrigées dans le Sheet.
 
-### Breakpoints
-- **< 400px** - Très petits mobiles
-- **400-600px** - Mobiles standards
-- **600-768px** - Grands mobiles
-- **768px+** - Tablettes et desktop
+La copie de secours `data/parfums.json` est actualisée automatiquement à chaque déploiement
+(`scripts/deploy.sh`) ; on peut aussi la régénérer à la main avec `node scripts/update-fallback.mjs`.
 
-### Fonctionnalités
-- ✅ Unités relatives avec clamp()
-- ✅ Typography scalable
-- ✅ Modal responsive (max-height: 85vh)
-- ✅ Support orientation paysage
-- ✅ Touch targets optimisés
+## Développement local et tests
 
----
-
-## 🛠️ Installation
-
-```bash
-# Cloner le projet
-git clone [url-du-repo]
-
-# Ouvrir le projet
-cd jeu-de-dupes
-
-# Lancer un serveur local (optionnel)
-# Option 1: Python
-python -m http.server 8000
-
-# Option 2: Node.js
-npx serve
-
-# Option 3: PHP
-php -S localhost:8000
-```
-
-Ouvrir `http://localhost:8000` dans votre navigateur.
-
----
-
-## 📁 Structure du Projet
-
-```
-jeu-de-dupes/
-├── index.html              # Page principale
-├── css/
-│   └── style.css          # Styles avec responsive et a11y
-├── js/
-│   ├── main.js            # Logique principale sécurisée
-│   └── data.js            # Données statiques de fallback
-├── assets/
-│   └── affiche.jpg        # Image de l'affiche
-├── docs/
-│   ├── AVANCEMENT.md      # Suivi de l'avancement
-│   ├── CHANGELOG.md       # Journal des modifications
-│   └── CORRECTIONS-APPLIQUEES.md  # Détail des corrections
-├── .env.example           # Template variables d'environnement
-├── .gitignore            # Fichiers ignorés par Git
-└── README.md             # Ce fichier
-```
-
----
-
-## 🔧 Configuration
-
-### Variables d'environnement (optionnel)
-
-Si vous souhaitez utiliser votre propre Google Sheet:
-
-1. Copier `.env.example` en `.env`
-2. Remplir vos identifiants Google Sheets
-3. Modifier `js/main.js` pour utiliser l'API Google Sheets v4
-
-**Note:** Par défaut, le projet utilise l'API publique opensheet.elk.sh qui ne nécessite pas de clé API.
-
----
-
-## 🧪 Tests
-
-### Tests manuels recommandés
-
-- [ ] Navigation complète au clavier (Tab, Enter, Espace, Échap)
-- [ ] Test avec lecteur d'écran (NVDA/JAWS/VoiceOver)
-- [ ] Test mobile (320px, 375px, 414px)
-- [ ] Test tablette (768px, 1024px)
-- [ ] Test orientation paysage
-- [ ] Test zoom 200%
-- [ ] Test prefers-reduced-motion
-
-### Tests automatisés
+Prérequis : Node.js récent (testé avec Node 24).
 
 ```bash
-# Lighthouse audit
-npx lighthouse http://localhost:8000 --view
-
-# Objectif: Score Accessibilité >= 90
+npm install            # outils de développement uniquement
+npm run serve          # site sur http://localhost:4173
+npm test               # tests unitaires (Vitest)
+npm run test:coverage  # idem avec couverture, seuil de 80 % sur search.js, data.js, format.js, idle.js
+npm run test:e2e       # parcours Playwright (tablette paysage, portrait, mobile)
 ```
 
-**Outils recommandés:**
-- [Lighthouse](https://developers.google.com/web/tools/lighthouse) (Chrome DevTools)
-- [aXe DevTools](https://www.deque.com/axe/devtools/)
-- [WAVE](https://wave.webaim.org/extension/)
+Remarques :
 
----
+- Le navigateur de Playwright s'installe une fois avec `npx playwright install chromium`.
+- En local, `/api/parfums` n'existe pas (c'est un proxy nginx) : le site utilise alors `data/parfums.json`. Les
+  tests de parcours s'appuient sur ce comportement.
+- Les tests de parcours sont limités à 2 processus en parallèle, car `http-server` sature au-delà.
+- Les contraintes à respecter : aucun script ni ressource tiers, pas de `style=""` ni de `<script>` inline,
+  pas de `innerHTML` avec des données (affichage par `textContent`). La politique CSP du serveur les bloquerait.
 
-## 📝 Documentation
+## Déploiement et retour arrière
 
-- **[AVANCEMENT.md](docs/AVANCEMENT.md)** - Suivi détaillé de l'avancement du projet
-- **[CHANGELOG.md](docs/CHANGELOG.md)** - Journal de toutes les modifications
-- **[CORRECTIONS-APPLIQUEES.md](docs/CORRECTIONS-APPLIQUEES.md)** - Détail des 43 corrections appliquées
+Le site est servi par nginx sur le serveur `jppoizat.fr`, dossier `/home/projects/jeu-de-dupes`. Le vhost
+`nginx/dupes.conf` est lié dans `/etc/nginx/sites-enabled/`.
 
----
+```bash
+scripts/deploy.sh          # mise à jour
+scripts/deploy.sh --first  # tout premier déploiement uniquement (config HTTP temporaire + certificat)
+scripts/check-prod.sh      # contrôle du site en ligne (ou : scripts/check-prod.sh https://autre.exemple)
+```
 
-## 🎯 Améliorations Réalisées
+`deploy.sh` :
 
-### Version 0.2.0 (12 août 2026)
+- refuse de partir si l'arbre Git a des modifications non validées (commit d'abord) ;
+- met à jour `data/parfums.json` depuis le Sheet (sans bloquer si le Sheet est injoignable) ;
+- n'envoie que les fichiers publics et `nginx/` (liste blanche : `index.html`, `manifest.webmanifest`,
+  `sw.js`, `css/`, `js/`, `assets/`, `data/`, `nginx/`), par `tar` et `ssh` ;
+- change la version du cache du service worker, teste la configuration avec `nginx -t`, puis recharge nginx ;
+- en cas d'erreur ou d'interruption, remet automatiquement l'ancien dossier et l'ancienne configuration.
 
-**43 problèmes résolus:**
-- ✅ 14 vulnérabilités de sécurité
-- ✅ 19 violations d'accessibilité WCAG 2.2
-- ✅ 10 problèmes de responsive design
+`check-prod.sh` vérifie les en-têtes de sécurité, les 404 sur les chemins interdits, le 405 sur un POST, la
+redirection HTTPS et le TLS. Son code de sortie est le nombre de contrôles en échec (0 = tout est bon).
 
-**Gains mesurables:**
-- **Sécurité:** 15 → 85 (+70)
-- **Accessibilité:** 25 → 90 (+65)
-- **Responsive:** 55 → 88 (+33)
-- **Score global:** 32 → **88** (+56)
+**Retour arrière manuel** :
 
----
+- désactiver le site : sur le serveur,
+  `rm /etc/nginx/sites-enabled/dupes.conf && nginx -t && systemctl reload nginx` ;
+- ou revenir à une version précédente : `git checkout <commit>` puis `scripts/deploy.sh`.
 
-## 🤝 Contribution
+Le certificat Let's Encrypt se renouvelle seul (timer certbot). Journaux : `/var/log/nginx/dupes.access.log`
+et `/var/log/nginx/access.log` (ce dernier est surveillé par fail2ban).
 
-Les contributions sont les bienvenues! Pour contribuer:
+## Sécurité
 
-1. Fork le projet
-2. Créer une branche (`git checkout -b feature/AmazingFeature`)
-3. Commit les changements (`git commit -m 'Add AmazingFeature'`)
-4. Push vers la branche (`git push origin feature/AmazingFeature`)
-5. Ouvrir une Pull Request
+Site statique : pas de formulaire, pas de compte, aucune écriture côté serveur. Mesures en place :
 
----
+- **Liste blanche nginx** : seuls `/`, `/index.html`, `/manifest.webmanifest`, `/sw.js`, `/css/`, `/js/`,
+  `/assets/`, `/data/parfums.json` et `/api/parfums` répondent ; le reste renvoie 404, sans listage de dossiers.
+- **Méthodes** GET et HEAD uniquement (405 sinon), corps de requête limité à 1 ko.
+- **Limitation de débit** par IP (429 au-delà) : 10 requêtes/s avec une marge de 40, 20 connexions, et
+  30 requêtes/minute sur `/api/parfums`.
+- **TLS** 1.2 et 1.3, HTTP redirigé vers HTTPS, HSTS.
+- **En-têtes** : CSP stricte (`default-src 'none'`, scripts, styles, polices, images et connexions limités à
+  `'self'`), `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`,
+  `Permissions-Policy`, `Cross-Origin-Opener-Policy` et `Cross-Origin-Resource-Policy`.
+- **Proxy `/api/parfums`** : l'adresse d'opensheet est figée dans la configuration, aucun paramètre du client
+  n'est relayé.
+- **fail2ban** bannit automatiquement les scanners à partir des journaux nginx.
+- **Côté client** : aucun script tiers, polices hébergées avec le site, affichage des données par
+  `textContent`, validation stricte du contenu du Sheet.
 
-## 📄 Licence
+**À faire par le propriétaire : révoquer la clé Google.** Une clé d'API Google figure dans l'historique Git
+public (commit « add api key »). Elle doit être révoquée dans la console Google Cloud (API et services,
+Identifiants). Le code actuel n'utilise aucune clé, et il n'existe plus de fichier `.env`.
 
-Ce projet est sous licence MIT.
+## Structure du projet
 
----
-
-## 👥 Auteurs
-
-- **Développement initial** - Projet Jeu de Dupes
-- **Corrections et améliorations** - Claude Code (Sécurité, Accessibilité, Responsive)
-
----
-
-## 🙏 Remerciements
-
-- WCAG 2.2 Guidelines pour les standards d'accessibilité
-- OpenSheet pour l'API publique Google Sheets
-- Communauté web pour les best practices
-
----
-
-**Dernière mise à jour:** 12 août 2026
+```
+index.html                 coquille unique : 4 écrans et une boîte de dialogue
+manifest.webmanifest       installation plein écran
+sw.js                      service worker : site en cache, réseau d'abord pour /api/parfums
+css/style.css              thème et composants
+js/main.js                 point d'entrée : état, navigation, événements
+js/data.js                 chargement, validation, fusion des notes
+js/search.js               normalisation, distance de Levenshtein, classement
+js/format.js               mise en forme des marques
+js/i18n.js                 textes français et anglais
+js/idle.js                 minuterie d'inactivité
+js/views.js                rendu DOM (lignes, filtres, ticket)
+assets/                    affiche, polices (woff2), icônes
+data/parfums.json          copie de secours (188 parfums avec notes)
+nginx/                     vhost et en-têtes de sécurité
+scripts/                   deploy.sh, check-prod.sh, update-fallback.mjs
+tests/unit/, tests/e2e/    tests Vitest et Playwright
+docs/                      spécification, plan, notes à relire, anciens documents (docs/archive/)
+```
