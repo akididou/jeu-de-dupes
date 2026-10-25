@@ -32,7 +32,7 @@
 
 ---
 
-### Tâche 1 : outillage et nettoyage
+### Task 1 : outillage et nettoyage
 
 **Fichiers :**
 - Créer : `package.json`, `vitest.config.js`, `playwright.config.js`
@@ -47,7 +47,7 @@
 - [ ] **Étape 3 :** `npm test` doit sortir proprement avec « No test files found » (code 0 grâce à `passWithNoTests: true`).
 - [ ] **Étape 4 :** commit `chore: outillage de tests et nettoyage des fichiers obsolètes`.
 
-### Tâche 2 : moteur de recherche (`js/search.js`)
+### Task 2 : moteur de recherche (`js/search.js`)
 
 **Fichiers :** créer `js/search.js` et `tests/unit/search.test.js`.
 
@@ -76,7 +76,7 @@
 - [ ] **Étape 4 :** les tests passent.
 - [ ] **Étape 5 :** commit `feat: moteur de recherche tolérant (accents, fautes, notes)`.
 
-### Tâche 3 : données (`js/data.js`, `js/format.js`, `data/parfums.json`, `scripts/update-fallback.mjs`)
+### Task 3 : données (`js/data.js`, `js/format.js`, `data/parfums.json`, `scripts/update-fallback.mjs`)
 
 **Fichiers :**
 - Créer : `js/data.js`, `js/format.js`, `scripts/update-fallback.mjs`, `data/parfums.json`, `tests/unit/data.test.js`, `tests/unit/format.test.js`
@@ -112,7 +112,7 @@
 - [ ] **Étape 6 :** `npm test` passe.
 - [ ] **Étape 7 :** commit `feat: chargement des données avec proxy, secours et notes olfactives`.
 
-### Tâche 4 : textes et inactivité (`js/i18n.js`, `js/idle.js`)
+### Task 4 : textes et inactivité (`js/i18n.js`, `js/idle.js`)
 
 **Fichiers :** créer `js/i18n.js`, `js/idle.js` et `tests/unit/idle.test.js`.
 
@@ -131,7 +131,7 @@
 - [ ] **Étape 4 :** les tests passent.
 - [ ] **Étape 5 :** commit `feat: textes FR/EN et minuterie d'inactivité`.
 
-### Tâche 5 : interface (`index.html`, `css/style.css`, `js/views.js`, `js/main.js`, polices, icônes)
+### Task 5 : interface (`index.html`, `css/style.css`, `js/views.js`, `js/main.js`, polices, icônes)
 
 **Fichiers :**
 - Réécrire : `index.html`, `css/style.css`
@@ -161,7 +161,7 @@
 - [ ] **Étape 5 :** vérification visuelle par captures d'écran (Playwright) en tablette paysage, portrait et mobile ; le rendu doit correspondre à la maquette.
 - [ ] **Étape 6 :** commit `feat: nouvelle interface borne (accueil, collections, familles, ticket)`.
 
-### Tâche 6 : application installable et hors-ligne (`manifest.webmanifest`, `sw.js`)
+### Task 6 : application installable et hors-ligne (`manifest.webmanifest`, `sw.js`)
 
 **Fichiers :** créer `manifest.webmanifest`, `sw.js` et `tests/e2e/hors-ligne.spec.js` ; modifier `js/main.js`.
 
@@ -179,7 +179,7 @@
 - [ ] **Étape 4 :** les tests passent, y compris ceux de la tâche 5.
 - [ ] **Étape 5 :** commit `feat: application installable et fonctionnement hors-ligne`.
 
-### Tâche 7 : configuration serveur et script de déploiement
+### Task 7 : configuration serveur et script de déploiement
 
 **Fichiers :** créer `nginx/dupes.conf`, `nginx/security-headers.conf`, `scripts/deploy.sh` et `scripts/check-prod.sh`.
 
@@ -218,7 +218,7 @@
 - [ ] **Étape 3 :** relecture de sécurité ciblée par un agent `security-reviewer` sur `nginx/` et `scripts/`. Corriger les points CRITICAL et HIGH.
 - [ ] **Étape 4 :** commit `feat: configuration nginx sécurisée et script de déploiement`.
 
-### Tâche 8 : mise en production
+### Task 8 : mise en production
 
 - [ ] **Étape 1 :** sur le serveur, `rm -rf /home/projects/jeu-de-dupes` (ancien clone ; suppression validée par le propriétaire).
 - [ ] **Étape 2 :** `bash scripts/deploy.sh --first` → certificat obtenu, `nginx -t` OK, nginx rechargé.
@@ -226,7 +226,7 @@
 - [ ] **Étape 4 :** test du parcours en ligne avec Playwright sur `https://dupes.jppoizat.fr` (variable `BASE_URL`, sans interception de route) : accueil, recherche, ticket, aucune erreur console.
 - [ ] **Étape 5 :** si un contrôle échoue, revenir en arrière (suppression du lien dans `sites-enabled` puis rechargement), corriger, redéployer.
 
-### Tâche 9 : documentation et clôture
+### Task 9 : documentation et clôture
 
 **Fichiers :** réécrire `README.md` ; supprimer `maquette/`.
 
