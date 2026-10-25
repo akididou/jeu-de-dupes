@@ -1,0 +1,30 @@
+{
+  "name": "jeu-de-dupes",
+  "version": "1.0.0",
+  "description": "Application interactive pour découvrir les parfums associés aux personnages du film \"Jeux de Dupes\".",
+  "scripts": {
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "serve": "http-server . -p 4173 -c-1 -s"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/akididou/jeu-de-dupes.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/akididou/jeu-de-dupes/issues"
+  },
+  "homepage": "https://github.com/akididou/jeu-de-dupes#readme",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@vitest/coverage-v8": "^5.0.5",
+    "http-server": "^14.1.1",
+    "vitest": "^5.0.5"
+  }
+}
