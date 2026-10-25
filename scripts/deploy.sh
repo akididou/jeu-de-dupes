@@ -254,7 +254,7 @@ if [ -z "$exit_code" ]; then
 fi
 rssh "bash -c 'rm -rf \"${RDIR}\"'" || echo "(dossier distant $RDIR à supprimer à la main)" >&2
 if [ "$exit_code" != 0 ]; then
-  die "le déploiement distant a échoué (code $exit_code) ; le serveur a été remis dans son état précédent."
+  die "le déploiement distant a échoué (code $exit_code) ; aucune modification de ce déploiement n'est conservée sur le serveur."
 fi
 
 echo
