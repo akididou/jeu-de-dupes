@@ -2,6 +2,8 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: 'tests/e2e',
+  // http-server sature avec le nombre de workers par défaut : des page.goto bloquent 30 s.
+  workers: 2,
   use: {
     baseURL: 'http://localhost:4173',
     // Les service workers masquent les requêtes à page.route ; seul hors-ligne.spec.js les autorise.
