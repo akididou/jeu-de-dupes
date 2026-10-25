@@ -61,6 +61,7 @@ test('accueil → Elle → filtre Christian Dior → ticket J\'ADORE', async ({ 
   const ticket = page.locator('#ticket');
   await expect(ticket).toBeVisible();
   await expect(page.locator('#ticket-num')).toHaveText('46');
+  await expect(ticket).toHaveAccessibleName("Notre version n°46, évoque J'ADORE");
   await expect(page.locator('#ticket-notes')).toBeVisible();
   await expect(page.locator('#ticket-notes h3')).toHaveText('Notes du parfum original');
 
@@ -99,10 +100,20 @@ test('le bouton EN passe l\'interface en anglais', async ({ page }) => {
   await page.locator('#screen-home [data-lang-toggle]').click();
   await expect(page.locator('#home-title')).toHaveText('Which fragrance do you love?');
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+
+  // Les libellés accessibles des groupes de la collection suivent la langue.
+  await page.locator('#screen-home [data-univers="femme"]').click();
+  await expect(page.locator('.segmented')).toHaveAttribute('aria-label', 'Collection');
+  await expect(page.locator('#rail-tabs')).toHaveAttribute('aria-label', 'Filter by');
+  await expect(page.locator('#brand-rail')).toHaveAttribute('aria-label', 'Filters');
+  await page.locator('#screen-list [data-lang-toggle]').click();
+  await expect(page.locator('#rail-tabs')).toHaveAttribute('aria-label', 'Filtrer par');
+  await expect(page.locator('#brand-rail')).toHaveAttribute('aria-label', 'Filtres');
 });
 
-test('?idle=3 : retour à l\'accueil en français après inactivité', async ({ page }) => {
+test('?idle=3 : retour à l\'accueil en français après inactivité, sans rechargement avant 10 min', async ({ page }) => {
   await openHome(page, '?idle=3');
+  await page.evaluate(() => { window.__avantRetour = true; });
   await page.locator('#screen-home [data-lang-toggle]').click();
   await page.locator('#screen-home [data-univers="femme"]').click();
   await expect(page.locator('#screen-list')).toBeVisible();
@@ -113,6 +124,63 @@ test('?idle=3 : retour à l\'accueil en français après inactivité', async ({ 
   await expect(page.locator('#idle')).toBeHidden();
   await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
   await expect(page.locator('#home-title')).toHaveText('Quel parfum aimez\u2011vous ?');
+  // Moins de 10 minutes depuis le chargement : simple retour, la page n'est pas rechargée.
+  expect(await page.evaluate(() => window.__avantRetour)).toBe(true);
+});
+
+test('?idle=3&reload=0 : à l\'expiration, la page se recharge (données et code frais) sur l\'accueil', async ({ page }) => {
+  await openHome(page, '?idle=3&reload=0');
+  await page.evaluate(() => { window.__avantRetour = true; });
+  await page.locator('#screen-home [data-univers="femme"]').click();
+  await expect(page.locator('#screen-list')).toBeVisible();
+
+  await page.waitForEvent('load', { timeout: 8000 });
+  await expect(page.locator('#screen-home')).toBeVisible();
+  await expect(page.locator('#screen-home [data-count="femme"]')).toHaveText('7 parfums');
+  expect(await page.evaluate(() => window.__avantRetour)).toBeUndefined();
+  expect(new URL(page.url()).search).toBe('?idle=3&reload=0');
+});
+
+test('Échap sur l\'avertissement d\'inactivité le ferme et relance la minuterie', async ({ page }) => {
+  // 13 s : 3 s d'attente puis 10 s d'avertissement.
+  await openHome(page, '?idle=13');
+  await page.locator('#screen-home [data-univers="femme"]').click();
+  const idle = page.locator('#idle');
+  await expect(idle).toBeVisible({ timeout: 6000 });
+
+  await page.keyboard.press('Escape');
+  await expect(idle).toBeHidden();
+  // Sans remise à zéro, le décompte continuerait et rouvrirait l'avertissement dans la seconde.
+  await page.waitForTimeout(1800);
+  await expect(idle).toBeHidden();
+  await expect(page.locator('#screen-list')).toBeVisible();
+});
+
+test('avant l\'arrivée des données, la collection affiche « Chargement… » et pas « 0 parfums »', async ({ page }) => {
+  let release;
+  const gate = new Promise((resolve) => { release = resolve; });
+  await page.route('**/api/parfums', async (route) => {
+    await gate;
+    await route.fulfill({ status: 200, contentType: 'application/json', body: FIXTURE });
+  });
+  await page.route('**/data/parfums.json', async (route) => {
+    await gate;
+    await route.continue();
+  });
+  await page.goto('/');
+  await expect(page.locator('#screen-home [data-count="femme"]')).toHaveText('');
+
+  await page.locator('#screen-home [data-univers="femme"]').click();
+  await expect(page.locator('#results')).toHaveText('Chargement…');
+  await expect(page.locator('#list-count')).toHaveText('');
+  await page.locator('#list-search').fill('sauvage');
+  await expect(page.locator('#results')).toHaveText('Chargement…');
+  await expect(page.getByText('Aucun parfum')).toHaveCount(0);
+  await page.locator('#screen-list [data-lang-toggle]').click();
+  await expect(page.locator('#results')).toHaveText('Loading…');
+
+  release();
+  await expect(row(page, '342')).toBeVisible();
 });
 
 test('?idle=3 : l\'avertissement passe au-dessus du ticket et reste cliquable', async ({ page }) => {

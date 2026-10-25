@@ -11,7 +11,7 @@ const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
 /**
  * @typedef {{lang: string, univers: string|null, query: string, brand: string|null,
- *   famille: string|null, railMode: 'marques'|'familles', unavailable: boolean}} State
+ *   famille: string|null, railMode: 'marques'|'familles', unavailable: boolean, loading: boolean}} State
  * @typedef {{selectBrand: (marque: string|null) => void, selectFamille: (famille: string|null) => void,
  *   clearQuery: () => void, showTicket: (parfum: object) => void}} Actions
  */
@@ -169,12 +169,15 @@ function renderBrowse(state, scope, actions) {
   });
 }
 
-/** Ni API ni copie de secours : un message pour le visiteur plutôt qu'une liste vide. */
-function renderUnavailable(state) {
+/**
+ * Message à la place de la liste : données en cours de chargement (`loading`), ou ni API ni copie
+ * de secours (`unavailable`). Évite d'afficher « 0 parfums » ou « Aucun parfum ne correspond ».
+ */
+function renderNotice(state, key) {
   $('#list-title').textContent = universTitles(state.lang)[state.univers];
   $('#list-count').textContent = '';
   const empty = el('div', 'empty');
-  empty.append(el('p', '', translate(state.lang, 'unavailable')));
+  empty.append(el('p', '', translate(state.lang, key)));
   $('#results').append(empty);
 }
 
@@ -192,7 +195,8 @@ export function renderList(state, parfums, actions) {
   $$('.segmented button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.univers === state.univers)));
   $('[data-clear]').hidden = !state.query;
 
-  if (state.unavailable) renderUnavailable(state);
+  if (state.loading) renderNotice(state, 'loading');
+  else if (state.unavailable) renderNotice(state, 'unavailable');
   else if (hasQuery(state.query)) renderSearch(state, parfums, scope, actions);
   else renderBrowse(state, scope, actions);
 }
@@ -230,6 +234,7 @@ export function openTicket(parfum, lang) {
   if (dialog.open) return false;
   const t = (key) => translate(lang, key);
 
+  dialog.setAttribute('aria-label', t('ticketLabel')(parfum.numero, parfum.nom));
   $('#ticket-num').textContent = parfum.numero;
   $('#ticket-nom').textContent = parfum.nom;
   $('#ticket-marque').textContent = prettyBrand(parfum.marque);

@@ -8,26 +8,54 @@ import { openTicket, renderList, renderTexts } from './views.js';
 
 const DEFAULT_IDLE_SECONDS = 60;
 const MAX_IDLE_WARNING_SECONDS = 10;
+// Au retour automatique à l'accueil, la page est rechargée (données du Sheet, nouvelle version
+// du site) au plus une fois par intervalle. `?reload=N` le change, en secondes (aide de test).
+const DEFAULT_RELOAD_SECONDS = 10 * 60;
+const MS_PER_SECOND = 1000;
 // Un double appui sur une ligne ne doit pas refermer aussitôt le ticket par un clic sur le fond.
 const TICKET_BACKDROP_GUARD_MS = 500;
 
 const INITIAL_STATE = Object.freeze({
-  lang: 'fr', univers: null, query: '', brand: null, famille: null, railMode: 'marques', unavailable: false,
+  lang: 'fr', univers: null, query: '', brand: null, famille: null, railMode: 'marques',
+  loading: true, unavailable: false,
 });
 
 let state = INITIAL_STATE;
 let parfums = [];
 let ticketOpenedAt = 0;
+const loadedAt = Date.now();
+// Un nouveau service worker a pris la main : la prochaine expiration recharge, sans attendre l'intervalle.
+let updateActivated = false;
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
+/** Paramètre d'adresse en secondes ; absent, vide ou invalide : la valeur par défaut. */
+function secondsParam(search, name, { fallback, allowZero }) {
+  const raw = new URLSearchParams(search).get(name);
+  if (raw === null || raw.trim() === '') return fallback;
+  const seconds = Number(raw);
+  const valid = Number.isFinite(seconds) && (allowZero ? seconds >= 0 : seconds > 0);
+  return valid ? seconds : fallback;
+}
+
 /** `?idle=N` : durée totale d'inactivité en secondes (60 par défaut), avertissement 10 s au plus. */
 function idleSettings(search) {
-  const requested = Number(new URLSearchParams(search).get('idle'));
-  const totalSeconds = Number.isFinite(requested) && requested > 0 ? requested : DEFAULT_IDLE_SECONDS;
+  const totalSeconds = secondsParam(search, 'idle', { fallback: DEFAULT_IDLE_SECONDS, allowZero: false });
   const warningSeconds = Math.max(0, Math.min(MAX_IDLE_WARNING_SECONDS, totalSeconds - 1));
   return { totalSeconds, warningSeconds };
+}
+
+const RELOAD_INTERVAL_MS = MS_PER_SECOND
+  * secondsParam(location.search, 'reload', { fallback: DEFAULT_RELOAD_SECONDS, allowZero: true });
+
+/**
+ * Recharger au retour à l'accueil ? Oui si un nouveau service worker est actif ou si l'intervalle est
+ * écoulé, à condition que la page puisse revenir : réseau présent, ou service worker qui la sert hors ligne.
+ */
+function shouldReload() {
+  const canComeBack = navigator.onLine || Boolean(navigator.serviceWorker?.controller);
+  return canComeBack && (updateActivated || Date.now() - loadedAt >= RELOAD_INTERVAL_MS);
 }
 
 // ---------- Inactivité ----------
@@ -45,6 +73,7 @@ const idle = createIdleTimer({
     closeIdleWarning();
     state = { ...state, lang: 'fr' };
     goHome();
+    if (shouldReload()) location.reload();
   },
 });
 
@@ -112,7 +141,7 @@ function setQuery(query) {
 }
 
 function goHome() {
-  state = { ...INITIAL_STATE, lang: state.lang, unavailable: state.unavailable };
+  state = { ...INITIAL_STATE, lang: state.lang, loading: state.loading, unavailable: state.unavailable };
   const dialog = $('#ticket');
   if (dialog.open) dialog.close();
   if (document.activeElement) document.activeElement.blur();
@@ -161,12 +190,24 @@ function bindEvents() {
   bindTicket();
 
   $('[data-idle-continue]').addEventListener('click', resetIdle);
+  // Échap ou retour Android ferment le <dialog> sans passer par « Continuer » : c'est aussi une activité.
+  $('#idle').addEventListener('cancel', (event) => {
+    event.preventDefault();
+    resetIdle();
+  });
   ['pointerdown', 'keydown', 'input', 'scroll'].forEach((type) =>
     document.addEventListener(type, onActivity, { capture: true, passive: true }));
 }
 
 function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
+  // Le SW appelle skipWaiting et clients.claim : une nouvelle version prend la main dès son installation.
+  // Le tout premier contrôle (aucun SW avant) n'est pas une mise à jour.
+  let hadController = Boolean(navigator.serviceWorker.controller);
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (hadController) updateActivated = true;
+    hadController = true;
+  });
   // Sans bloquer l'affichage : l'enregistrement attend la fin du chargement de la page.
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js').catch((error) => {
@@ -189,6 +230,7 @@ async function init() {
     state = { ...state, unavailable: true };
     $('#data-dot').hidden = false;
   }
+  state = { ...state, loading: false };
   render();
 }
 

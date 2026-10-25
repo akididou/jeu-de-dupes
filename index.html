@@ -55,7 +55,7 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg>
                 <span data-i18n="back">Accueil</span>
             </button>
-            <div class="segmented" role="group" aria-label="Collection">
+            <div class="segmented" role="group" aria-label="Collection" data-i18n-aria="collectionLabel">
                 <button type="button" data-univers="femme" data-i18n="elle">Elle</button>
                 <button type="button" data-univers="homme" data-i18n="lui">Lui</button>
                 <button type="button" data-univers="tous" data-i18n="tous">Tous</button>
@@ -72,11 +72,11 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
             </button>
         </form>
-        <div class="rail-tabs" id="rail-tabs" role="group" hidden>
+        <div class="rail-tabs" id="rail-tabs" role="group" aria-label="Filtrer par" data-i18n-aria="railLabel" hidden>
             <button type="button" data-rail="marques" data-i18n="byBrand">Par marque</button>
             <button type="button" data-rail="familles" data-i18n="byFamily">Par famille</button>
         </div>
-        <nav class="brand-rail" id="brand-rail" aria-label="Filtres"></nav>
+        <nav class="brand-rail" id="brand-rail" aria-label="Filtres" data-i18n-aria="filtersLabel"></nav>
     </header>
 
     <main class="list-body">
@@ -87,7 +87,8 @@
 </section>
 
 <!-- Fiche parfum : le ticket -->
-<dialog class="ticket-dialog" id="ticket" aria-labelledby="ticket-num">
+<!-- Nom accessible (« Notre version n°X, évoque NOM ») posé par openTicket dans views.js. -->
+<dialog class="ticket-dialog" id="ticket">
     <article class="ticket">
         <div class="ticket-stub">
             <span class="ticket-kicker" data-i18n="ticketKicker">Notre version</span>
