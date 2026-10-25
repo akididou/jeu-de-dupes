@@ -134,6 +134,28 @@ test('?idle=3 : l\'avertissement passe au-dessus du ticket et reste cliquable', 
   await expect(page.locator('dialog[open]')).toHaveCount(0);
 });
 
+test.describe('écran tactile', () => {
+  test.use({ hasTouch: true });
+
+  test('?idle=3 : toucher « Continuer » garde le ticket ouvert (pas de clic sur le fond)', async ({ page }) => {
+    await openHome(page, '?idle=3');
+    await page.locator('#screen-home [data-univers="femme"]').tap();
+    await row(page, '46').tap();
+    await expect(page.locator('#ticket')).toBeVisible();
+
+    const idle = page.locator('#idle');
+    const button = page.locator('[data-idle-continue]');
+    await expect(button).toBeVisible();
+    const box = await button.boundingBox();
+    // Séquence tactile réelle : pointerdown, pointerup puis clic synthétisé à la position touchée.
+    await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
+
+    await expect(idle).toBeHidden();
+    await expect(page.locator('#ticket')).toBeVisible();
+    await expect(page.locator('#ticket-num')).toHaveText('46');
+  });
+});
+
 test('un double clic rapide n\'ouvre qu\'un seul ticket, sans erreur', async ({ page }) => {
   await page.addInitScript(() => {
     window.__showModalCalls = [];

@@ -4,6 +4,8 @@ export default defineConfig({
   testDir: 'tests/e2e',
   use: {
     baseURL: 'http://localhost:4173',
+    // Les service workers masquent les requêtes à page.route ; seul hors-ligne.spec.js les autorise.
+    serviceWorkers: 'block',
   },
   webServer: {
     command: 'npx http-server . -p 4173 -c-1 -s',

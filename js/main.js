@@ -53,6 +53,17 @@ function closeIdleWarning() {
   if (warning.open) warning.close();
 }
 
+/**
+ * Activité du visiteur. Un appui dans l'avertissement ne le ferme pas : sur un écran tactile il
+ * disparaîtrait avant le `click`, qui tomberait sur ce qu'il recouvre. Le bouton « Continuer » le ferme.
+ */
+function onActivity(event) {
+  const warning = $('#idle');
+  const insideWarning = event.target !== warning && warning.contains(event.target);
+  if (warning.open && insideWarning) return;
+  resetIdle();
+}
+
 function resetIdle() {
   closeIdleWarning();
   idle.reset();
@@ -151,10 +162,21 @@ function bindEvents() {
 
   $('[data-idle-continue]').addEventListener('click', resetIdle);
   ['pointerdown', 'keydown', 'input', 'scroll'].forEach((type) =>
-    document.addEventListener(type, resetIdle, { capture: true, passive: true }));
+    document.addEventListener(type, onActivity, { capture: true, passive: true }));
+}
+
+function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
+  // Sans bloquer l'affichage : l'enregistrement attend la fin du chargement de la page.
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch((error) => {
+      console.warn('Service worker non enregistré :', error);
+    });
+  });
 }
 
 async function init() {
+  registerServiceWorker();
   bindEvents();
   render();
   try {
