@@ -7,7 +7,7 @@ export default defineConfig({
     passWithNoTests: true,
     coverage: {
       provider: 'v8',
-      include: ['js/search.js', 'js/data.js', 'js/format.js', 'js/idle.js'],
+      include: ['js/search.js', 'js/data.js', 'js/format.js', 'js/idle.js', 'js/route.js'],
       thresholds: {
         lines: 80,
         functions: 80,

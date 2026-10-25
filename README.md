@@ -22,6 +22,12 @@ utilisable sans réseau.
    invitant à montrer le ticket à un conseiller.
 4. **Inactivité** : après 60 s sans contact, un compte à rebours de 10 s s'affiche, puis la borne revient à
    l'accueil, vide la recherche et repasse en français. Le bouton FR/EN change la langue de l'interface.
+5. **Retour arrière** (geste ou bouton retour d'Android, Échap) : du ticket vers la liste, au même endroit
+   (univers, recherche, filtres, défilement), puis de la liste vers l'accueil. « Fermer », toucher à côté du
+   ticket et le bouton « Accueil » font de même, sans empiler d'historique d'un client à l'autre ; changer
+   d'univers, de filtre ou de recherche dans la liste n'ajoute pas d'étape. Chaque fiche a une adresse
+   lisible, par exemple `#/dupe/homme/342-sauvage` : ouverte directement, elle affiche le ticket sur
+   l'accueil. Le retour automatique après inactivité dépile tout l'historique et laisse une adresse propre.
 
 Un petit point discret en bas à droite de l'écran signale au personnel que la borne n'a pas la liste
 fraîche du Sheet : elle utilise la copie de secours, ou, hors ligne, la dernière liste reçue gardée en cache
@@ -103,7 +109,7 @@ Prérequis : Node.js récent (testé avec Node 24).
 npm install            # outils de développement uniquement
 npm run serve          # site sur http://localhost:4173
 npm test               # tests unitaires (Vitest)
-npm run test:coverage  # idem avec couverture, seuil de 80 % sur search.js, data.js, format.js, idle.js
+npm run test:coverage  # idem avec couverture, seuil de 80 % sur search.js, data.js, format.js, idle.js, route.js
 npm run test:e2e       # parcours Playwright (tablette paysage, portrait, mobile)
 ```
 
@@ -194,6 +200,7 @@ js/search.js               normalisation, distance de Levenshtein, classement
 js/format.js               mise en forme des marques
 js/i18n.js                 textes français et anglais
 js/idle.js                 minuterie d'inactivité
+js/route.js                adresses (#/collection, #/dupe/…) et recherche du dupe d'un lien direct
 js/views.js                rendu DOM (lignes, filtres, ticket)
 assets/                    affiche, polices (woff2), icônes
 data/parfums.json          copie de secours (188 parfums avec notes)

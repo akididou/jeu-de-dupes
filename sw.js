@@ -21,6 +21,7 @@ const PRECACHE = [
   'js/format.js',
   'js/i18n.js',
   'js/idle.js',
+  'js/route.js',
   'assets/affiche.jpg',
   'assets/fonts/big-shoulders-display-latin-ext-wght-normal.woff2',
   'assets/fonts/big-shoulders-display-latin-wght-normal.woff2',

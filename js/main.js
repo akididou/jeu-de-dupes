@@ -3,6 +3,7 @@
 import { loadParfums } from './data.js';
 import { translate } from './i18n.js';
 import { createIdleTimer } from './idle.js';
+import { LIST_HASH, dupeHash, findParfum, parseRoute } from './route.js';
 import { hasQuery } from './search.js';
 import { openTicket, renderList, renderTexts } from './views.js';
 
@@ -14,6 +15,8 @@ const DEFAULT_RELOAD_SECONDS = 10 * 60;
 const MS_PER_SECOND = 1000;
 // Un double appui sur une ligne ne doit pas refermer aussitôt le ticket par un clic sur le fond.
 const TICKET_BACKDROP_GUARD_MS = 500;
+// Un retour arrière demandé (Fermer, Échap, Accueil) attend son popstate ; au-delà, on n'attend plus.
+const BACK_PENDING_MAX_MS = 1000;
 
 const INITIAL_STATE = Object.freeze({
   lang: 'fr', univers: null, query: '', brand: null, famille: null, railMode: 'marques',
@@ -26,6 +29,10 @@ let ticketOpenedAt = 0;
 const loadedAt = Date.now();
 // Un nouveau service worker a pris la main : la prochaine expiration recharge, sans attendre l'intervalle.
 let updateActivated = false;
+// Instant du dernier history.back() demandé par l'interface, tant que son popstate n'est pas arrivé.
+let backRequestedAt = null;
+// L'inactivité a lancé history.go(-profondeur) : le popstate de l'accueil termine le retour (et recharge).
+let idleReturnPending = false;
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
@@ -72,10 +79,22 @@ const idle = createIdleTimer({
   onExpire: () => {
     closeIdleWarning();
     state = { ...state, lang: 'fr' };
-    goHome();
-    if (shouldReload()) location.reload();
+    const depth = currentDepth();
+    if (depth > 0) {
+      // Le rechargement éventuel attend le popstate : jamais en concurrence avec history.go.
+      idleReturnPending = true;
+      history.go(-depth);
+      return;
+    }
+    finishHome();
   },
 });
+
+/** Accueil atteint après inactivité : rechargement si dû (données du Sheet, nouvelle version). */
+function finishHome() {
+  goHome();
+  if (shouldReload()) location.reload();
+}
 
 function closeIdleWarning() {
   const warning = $('#idle');
@@ -96,6 +115,87 @@ function onActivity(event) {
 function resetIdle() {
   closeIdleWarning();
   idle.reset();
+}
+
+// ---------- Historique ----------
+// Entrées : accueil (profondeur 0, sans hash), liste (1, #/collection), dupe (2, ou 1 en lien direct).
+
+const baseUrl = () => location.pathname + location.search;
+const currentScreen = () => history.state?.screen ?? 'home';
+const currentDepth = () => history.state?.depth ?? 0;
+
+function pushEntry(screen, hash) {
+  history.pushState({ screen, depth: currentDepth() + 1 }, '', baseUrl() + hash);
+}
+
+/** Retour arrière demandé par l'interface ; un second appui avant le popstate ne dépile pas deux fois. */
+function requestBack() {
+  if (backRequestedAt !== null && performance.now() - backRequestedAt < BACK_PENDING_MAX_MS) return;
+  backRequestedAt = performance.now();
+  history.back();
+}
+
+/** Ferme le ticket comme un retour arrière s'il a son entrée d'historique, sinon directement. */
+function closeTicket() {
+  const dialog = $('#ticket');
+  if (currentScreen() === 'dupe') requestBack();
+  else if (dialog.open) dialog.close();
+}
+
+/** Seule source de vérité des retours et avances : l'écran suit l'entrée d'historique atteinte. */
+function onPopState() {
+  backRequestedAt = null;
+  const screen = currentScreen();
+  if (idleReturnPending && screen !== 'home' && currentDepth() > 0) {
+    history.go(-currentDepth());
+    return;
+  }
+  if (screen === 'list') showListEntry();
+  else if (screen === 'dupe') showDupeEntry();
+  else if (idleReturnPending) {
+    idleReturnPending = false;
+    finishHome();
+  } else goHome();
+}
+
+/** Retour du ticket : la liste garde univers, recherche, filtres et défilement. */
+function showListEntry() {
+  const dialog = $('#ticket');
+  if (dialog.open) dialog.close();
+  if (state.univers === null) update({ univers: 'tous' });
+}
+
+/** Avance vers un dupe : on le rouvre, ou l'entrée devient liste / accueil s'il n'existe plus. */
+function showDupeEntry() {
+  const parfum = findParfum(parseRoute(location.hash), parfums);
+  if (parfum) {
+    if (openTicket(parfum, state.lang)) ticketOpenedAt = performance.now();
+    resetIdle();
+    return;
+  }
+  const depth = currentDepth();
+  const screen = depth > 1 ? 'list' : 'home';
+  history.replaceState({ screen, depth }, '', baseUrl() + (screen === 'list' ? LIST_HASH : ''));
+  if (screen === 'list') showListEntry();
+  else goHome();
+}
+
+/** Au chargement : adresse propre (accueil) ; le hash d'origine sert au lien direct vers un dupe. */
+function initHistory() {
+  const initialHash = location.hash;
+  history.replaceState({ screen: 'home', depth: 0 }, '', baseUrl());
+  window.addEventListener('popstate', onPopState);
+  return initialHash;
+}
+
+/** Lien direct : le dupe s'ouvre sur l'accueil (profondeur 1), si le visiteur n'a pas déjà bougé. */
+function openDeepLink(hash) {
+  const parfum = findParfum(parseRoute(hash), parfums);
+  if (!parfum || currentScreen() !== 'home' || state.univers !== null) return;
+  if (!openTicket(parfum, state.lang)) return;
+  ticketOpenedAt = performance.now();
+  pushEntry('dupe', dupeHash(parfum));
+  resetIdle();
 }
 
 // ---------- Rendu ----------
@@ -123,13 +223,20 @@ function update(patch) {
 
 // ---------- Actions ----------
 
+/** Accueil → liste : une entrée d'historique. À l'intérieur de la liste, aucune. */
+function enterList() {
+  if (state.univers === null && currentScreen() === 'home') pushEntry('list', LIST_HASH);
+}
+
 function goUnivers(univers) {
+  enterList();
   update({ univers, brand: null, famille: null });
   scrollListTop();
 }
 
 function setQuery(query) {
   if (hasQuery(query) && state.univers === null) {
+    enterList();
     update({ query, univers: 'tous' });
     const input = $('#list-search');
     input.focus();
@@ -149,8 +256,18 @@ function goHome() {
 }
 
 function showTicket(parfum) {
-  if (openTicket(parfum, state.lang)) ticketOpenedAt = performance.now();
+  // Double appui : le ticket déjà ouvert n'ajoute pas d'entrée.
+  if (openTicket(parfum, state.lang)) {
+    ticketOpenedAt = performance.now();
+    pushEntry('dupe', dupeHash(parfum));
+  }
   resetIdle();
+}
+
+/** Bouton « Accueil » de la liste : dépile l'entrée liste plutôt que d'en ajouter une. */
+function leaveList() {
+  if (currentScreen() === 'list') requestBack();
+  else goHome();
 }
 
 const actions = {
@@ -164,12 +281,22 @@ const actions = {
 
 function bindTicket() {
   const dialog = $('#ticket');
-  $('[data-close-ticket]').addEventListener('click', () => dialog.close());
+  $('[data-close-ticket]').addEventListener('click', closeTicket);
   dialog.addEventListener('click', (e) => {
     const justOpened = performance.now() - ticketOpenedAt < TICKET_BACKDROP_GUARD_MS;
-    if (e.target === dialog && !justOpened) dialog.close();
+    if (e.target === dialog && !justOpened) closeTicket();
   });
-  dialog.addEventListener('close', resetIdle);
+  // Échap ou geste retour Android : même effet que le retour arrière (la liste).
+  dialog.addEventListener('cancel', (event) => {
+    event.preventDefault();
+    closeTicket();
+  });
+  dialog.addEventListener('close', () => {
+    // Fermé hors historique (Chrome peut ignorer preventDefault sur cancel) : on dépile quand même.
+    // L'évènement arrive après coup : un ticket rouvert entre-temps (appui rapide) est laissé ouvert.
+    if (!dialog.open && currentScreen() === 'dupe') requestBack();
+    resetIdle();
+  });
 }
 
 function bindEvents() {
@@ -180,7 +307,7 @@ function bindEvents() {
     form.querySelector('input').blur();
   }));
   $('[data-clear]').addEventListener('click', () => { setQuery(''); $('#list-search').focus(); });
-  $('[data-home]').addEventListener('click', goHome);
+  $('[data-home]').addEventListener('click', leaveList);
   $$('#rail-tabs button').forEach((b) => b.addEventListener('click', () => {
     update({ railMode: b.dataset.rail, brand: null, famille: null });
   }));
@@ -217,6 +344,7 @@ function registerServiceWorker() {
 }
 
 async function init() {
+  const initialHash = initHistory();
   registerServiceWorker();
   bindEvents();
   render();
@@ -232,6 +360,7 @@ async function init() {
   }
   state = { ...state, loading: false };
   render();
+  openDeepLink(initialHash);
 }
 
 init();
