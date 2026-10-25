@@ -1,0 +1,26 @@
+import { describe, expect, test } from 'vitest';
+import { translate } from '../../js/i18n.js';
+
+describe('translate', () => {
+  test('renvoie la valeur française ou anglaise', () => {
+    expect(translate('fr', 'elle')).toBe('Elle');
+    expect(translate('en', 'elle')).toBe('Her');
+  });
+
+  test('renvoie une fonction appelable pour les textes dynamiques', () => {
+    expect(translate('fr', 'found')(1)).toBe('1 parfum trouvé');
+    expect(translate('en', 'found')(3)).toBe('3 fragrances found');
+  });
+
+  test('renvoie l’objet des familles', () => {
+    expect(translate('fr', 'familles').Hespéridé).toBe('Agrumes');
+  });
+
+  test('retombe sur le français pour une langue inconnue', () => {
+    expect(translate('de', 'elle')).toBe('Elle');
+  });
+
+  test('renvoie la clé elle-même quand elle est inconnue', () => {
+    expect(translate('fr', 'cleInexistante')).toBe('cleInexistante');
+  });
+});
