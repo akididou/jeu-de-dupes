@@ -1,1 +1,8 @@
 .env
+
+# Outils locaux
+.playwright-mcp/
+node_modules/
+coverage/
+test-results/
+playwright-report/
