@@ -1,5 +1,5 @@
-import { existsSync, readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { relative, resolve, sep } from 'node:path';
 import { describe, expect, test } from 'vitest';
 
 const ROOT = resolve(import.meta.dirname, '../..');
@@ -31,6 +31,25 @@ describe('sw.js', () => {
     for (const expected of ['./', 'index.html', 'manifest.webmanifest', 'data/parfums.json', 'assets/affiche.jpg', ...iconPaths]) {
       expect(paths).toContain(expected);
     }
+  });
+});
+
+/** Fichiers d'un dossier, en chemins relatifs à la racine du site (séparateur « / »). */
+function filesIn(dir) {
+  return readdirSync(resolve(ROOT, dir), { recursive: true, withFileTypes: true })
+    .filter((entry) => entry.isFile())
+    .map((entry) => relative(ROOT, resolve(entry.parentPath, entry.name)).split(sep).join('/'));
+}
+
+describe('sw.js, complétude du précache', () => {
+  test('chaque fichier livré du site est précaché (sinon il manquerait hors ligne)', () => {
+    const shipped = [
+      ...['js', 'css', 'assets/fonts', 'assets/icons'].flatMap(filesIn),
+      'assets/affiche.jpg', 'data/parfums.json', 'index.html', 'manifest.webmanifest',
+    ];
+    expect(shipped.length).toBeGreaterThan(15);
+    const paths = precachedPaths();
+    expect(shipped.filter((file) => !paths.includes(file))).toEqual([]);
   });
 });
 

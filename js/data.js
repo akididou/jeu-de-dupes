@@ -1,11 +1,14 @@
 // Chargement et assainissement des données parfums.
 // Module pur : aucun accès au DOM (importé aussi par scripts/update-fallback.mjs sous Node).
 
+import { TEXTS } from './i18n.js';
 import { buildIndex, normalize } from './search.js';
 
 export const API_URL = 'api/parfums';
 export const FALLBACK_URL = 'data/parfums.json';
 export const FETCH_TIMEOUT_MS = 6000;
+/** En-tête ajouté par sw.js quand, hors ligne, il sert sa dernière copie de /api/parfums. */
+export const FROM_CACHE_HEADER = 'X-From-Cache';
 
 export const FAMILLES = [
   'Hespéridé', 'Aquatique', 'Aromatique', 'Floral', 'Chypré',
@@ -98,6 +101,12 @@ function olfactif(row, notes, ids) {
   };
 }
 
+/** Libellés français et anglais de la famille, tels qu'affichés (« Agrumes », « Citrus »). */
+function familleLabels(famille) {
+  if (!famille) return [];
+  return [TEXTS.fr.familles[famille], TEXTS.en.familles[famille]].filter(Boolean);
+}
+
 function toParfum(row, notes) {
   if (!row || typeof row !== 'object') return [];
   const categorie = String(row.categorie || '').trim().toLowerCase();
@@ -107,7 +116,8 @@ function toParfum(row, notes) {
   if (!CATEGORIES.includes(categorie) || !numero || !nom || !marque) return [];
   if (nom.length > MAX_NOM_LENGTH || marque.length > MAX_MARQUE_LENGTH || numero.length > MAX_NUMERO_LENGTH) return [];
   const olf = olfactif(row, notes, [categorie, numero, nom, marque]);
-  return [{ categorie, numero, nom, marque, ...olf, index: buildIndex({ nom, marque, ...olf }) }];
+  const index = buildIndex({ nom, marque, ...olf, familleLabels: familleLabels(olf.famille) });
+  return [{ categorie, numero, nom, marque, ...olf, index }];
 }
 
 /**
@@ -121,8 +131,9 @@ export function sanitize(entries, notes) {
 }
 
 /**
+ * `fromCache` : réponse servie par le service worker depuis son cache (borne hors ligne).
  * @param {string} url
- * @returns {Promise<unknown>}
+ * @returns {Promise<{data: unknown, fromCache: boolean}>}
  */
 export async function fetchJson(url) {
   const controller = new AbortController();
@@ -130,7 +141,7 @@ export async function fetchJson(url) {
   try {
     const res = await fetch(url, { signal: controller.signal });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
+    return { data: await res.json(), fromCache: res.headers.get(FROM_CACHE_HEADER) === '1' };
   } finally {
     clearTimeout(timer);
   }
@@ -138,21 +149,23 @@ export async function fetchJson(url) {
 
 /**
  * Lit la copie locale (notes + secours), essaie l'API, retombe sur la copie si besoin.
- * @param {{fetchJson?: (url: string) => Promise<unknown>}} [options]
+ * Une API servie par le cache du service worker compte comme données de secours (`backup`).
+ * @param {{fetchJson?: (url: string) => Promise<{data: unknown, fromCache: boolean}>}} [options]
  * @returns {Promise<{parfums: object[], backup: boolean}>}
  */
 export async function loadParfums({ fetchJson: fetcher = fetchJson } = {}) {
   let fallbackRows = [];
   try {
-    fallbackRows = await fetcher(FALLBACK_URL);
+    fallbackRows = (await fetcher(FALLBACK_URL)).data;
   } catch {
     // copie locale illisible : l'API peut encore répondre, sans notes
   }
   const notes = indexNotes(fallbackRows);
 
   try {
-    const live = sanitize(await fetcher(API_URL), notes);
-    if (live.length) return { parfums: live, backup: false };
+    const api = await fetcher(API_URL);
+    const live = sanitize(api.data, notes);
+    if (live.length) return { parfums: live, backup: api.fromCache };
   } catch {
     // API indisponible : on passe à la copie de secours
   }

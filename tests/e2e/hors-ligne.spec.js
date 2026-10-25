@@ -34,3 +34,24 @@ test('sans réseau, l\'accueil s\'affiche et « Lui » ouvre une liste non vide'
   await expect(page.locator('#screen-list')).toBeVisible();
   expect(await page.locator('#results .parfum').count()).toBeGreaterThan(0);
 });
+
+test('hors ligne, la liste du Sheet servie par le cache du SW allume le point de secours', async ({ page, context }) => {
+  // context.route intercepte aussi les requêtes faites par le service worker.
+  await context.route('**/api/parfums', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: FIXTURE }));
+  await page.goto('/');
+  await waitForControlledPage(page);
+  // Un chargement contrôlé par le SW : sa copie de /api/parfums est en cache.
+  await page.reload();
+  await expect(page.locator('#screen-home [data-count="femme"]')).toHaveText('7 parfums');
+  await expect(page.locator('#data-dot')).toBeHidden();
+
+  await context.unroute('**/api/parfums');
+  await context.route('**/api/parfums', (route) => route.abort('internetdisconnected'));
+  await context.setOffline(true);
+  await page.reload();
+
+  // Données du Sheet (7 parfums femme de la fixture, pas ceux de la copie de secours), mais périmées.
+  await expect(page.locator('#screen-home [data-count="femme"]')).toHaveText('7 parfums');
+  await expect(page.locator('#data-dot')).toBeVisible();
+});

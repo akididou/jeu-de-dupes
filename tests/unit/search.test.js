@@ -26,6 +26,10 @@ describe('normalize', () => {
   test('renvoie une chaîne vide pour de la ponctuation seule', () => {
     expect(normalize('  -- ')).toBe('');
   });
+  test('développe les ligatures œ et æ au lieu de les supprimer', () => {
+    expect(normalize('Œillet')).toBe('oeillet');
+    expect(normalize('cœur ÆTHER æ')).toBe('coeur aether ae');
+  });
 });
 
 describe('levenshtein', () => {
@@ -44,6 +48,13 @@ describe('buildIndex', () => {
     expect(idx.compact).toBe('jadoredior');
     expect(idx.nomCompact).toBe('jadore');
     expect(idx.noteWords).toEqual(['floral', 'poire']);
+  });
+  test('indexe les libellés de famille fournis (FR et EN) dans noteWords', () => {
+    const idx = buildIndex({
+      nom: 'A', marque: 'B', famille: 'Hespéridé', sousFamille: '', tete: [], coeur: [], fond: [],
+      familleLabels: ['Agrumes', 'Citrus'],
+    });
+    expect(idx.noteWords).toEqual(['hesperide', 'agrumes', 'citrus']);
   });
   test('noteWords vide sans notes', () => {
     const idx = buildIndex({ nom: 'A', marque: 'B', famille: '', sousFamille: '', tete: [], coeur: [], fond: [] });
@@ -64,6 +75,10 @@ describe('search', () => {
     const res = search('127', P);
     expect(res.map((p) => p.nom)).toContain('LE 127');
     expect(res[0].numero).toBe('127');
+  });
+  test('« oeillet » trouve un parfum dont une note est « Œillet »', () => {
+    const avecOeillet = [...P, make('10', 'EPICE', 'MAISON', { coeur: ['Œillet'] })];
+    expect(search('oeillet', avecOeillet).map((p) => p.numero)).toEqual(['10']);
   });
   test('trouve par note de fond uniquement', () => {
     const noms = search('vanille', P).map((p) => p.nom);

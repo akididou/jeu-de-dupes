@@ -1,9 +1,12 @@
-import { describe, expect, test } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import {
   API_URL,
   FALLBACK_URL,
   FAMILLES,
   FETCH_TIMEOUT_MS,
+  FROM_CACHE_HEADER,
+  fetchJson,
   indexNotes,
   loadParfums,
   notesKey,
@@ -11,6 +14,7 @@ import {
   parseNotes,
   sanitize,
 } from '../../js/data.js';
+import { search } from '../../js/search.js';
 
 const ligne = (extra = {}) => ({ categorie: 'femme', numero: '1', nom: 'N°5', marque: 'CHANEL', ...extra });
 
@@ -118,17 +122,26 @@ describe('sanitize', () => {
     expect(p.index.words).toEqual(['n', '5', 'chanel']);
     expect(p.index.noteWords).toContain('rose');
   });
+  test('« agrumes » et « citrus » trouvent tous les hespéridés (libellés FR et EN de la famille)', () => {
+    const fixture = JSON.parse(readFileSync(new URL('../e2e/fixtures/parfums.json', import.meta.url), 'utf8'));
+    const parfums = sanitize(fixture, new Map());
+    const hesperides = parfums.filter((p) => p.famille === 'Hespéridé').map((p) => p.numero).sort();
+    expect(hesperides.length).toBeGreaterThan(1);
+    for (const query of ['agrumes', 'citrus', 'Agrumes']) {
+      expect(search(query, parfums).map((p) => p.numero).sort()).toEqual(hesperides);
+    }
+  });
 });
 
 describe('loadParfums', () => {
   const secours = [ligne({ famille: 'Floral', notes_tete: 'Rose' })];
   const apiValide = [ligne({ nom: 'API' })];
 
-  const faux = (api) => async (url) => {
-    if (url === FALLBACK_URL) return secours;
+  const faux = (api, { fromCache = false } = {}) => async (url) => {
+    if (url === FALLBACK_URL) return { data: secours, fromCache: false };
     if (url === API_URL) {
       if (api instanceof Error) throw api;
-      return api;
+      return { data: api, fromCache };
     }
     throw new Error(`URL inattendue : ${url}`);
   };
@@ -159,15 +172,40 @@ describe('loadParfums', () => {
     await expect(loadParfums({ fetchJson })).rejects.toThrow();
   });
   test('rejette si la copie de secours est vide et l’API en erreur', async () => {
-    const fetchJson = async (url) => (url === FALLBACK_URL ? [] : { error: 'x' });
+    const fetchJson = async (url) => ({ data: url === FALLBACK_URL ? [] : { error: 'x' }, fromCache: false });
     await expect(loadParfums({ fetchJson })).rejects.toThrow();
   });
   test('utilise l’API même si le secours est illisible', async () => {
     const fetchJson = async (url) => {
       if (url === FALLBACK_URL) throw new Error('404');
-      return apiValide;
+      return { data: apiValide, fromCache: false };
     };
     const res = await loadParfums({ fetchJson });
     expect(res.backup).toBe(false);
+  });
+  test('signale la copie de secours quand l’API vient du cache du service worker (hors ligne)', async () => {
+    const res = await loadParfums({ fetchJson: faux(apiValide, { fromCache: true }) });
+    expect(res.backup).toBe(true);
+    expect(res.parfums[0].nom).toBe('API');
+  });
+});
+
+describe('fetchJson', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  const repondre = (body, init = {}) => vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify(body), init)));
+
+  test('renvoie les données, fromCache faux pour une réponse du réseau', async () => {
+    repondre([1, 2]);
+    await expect(fetchJson('x')).resolves.toEqual({ data: [1, 2], fromCache: false });
+  });
+  test('fromCache vrai quand le service worker marque la réponse', async () => {
+    expect(FROM_CACHE_HEADER).toBe('X-From-Cache');
+    repondre([1], { headers: { 'X-From-Cache': '1' } });
+    await expect(fetchJson('x')).resolves.toEqual({ data: [1], fromCache: true });
+  });
+  test('lève sur un statut HTTP en erreur', async () => {
+    repondre({ error: 'x' }, { status: 502 });
+    await expect(fetchJson('x')).rejects.toThrow('HTTP 502');
   });
 });

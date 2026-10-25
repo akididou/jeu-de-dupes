@@ -17,6 +17,9 @@ const MIN_TYPO_LENGTH = 4;
  */
 export function normalize(text) {
   return text
+    // Ligatures d'abord : la décomposition NFD ne les sépare pas, elles seraient supprimées (« Œillet » → « illet »).
+    .replace(/œ/g, 'oe').replace(/Œ/g, 'OE')
+    .replace(/æ/g, 'ae').replace(/Æ/g, 'AE')
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
@@ -34,13 +37,14 @@ export function hasQuery(query) {
 }
 
 /**
+ * `familleLabels` : libellés de la famille montrés au visiteur (« Agrumes », « Citrus »), cherchables comme les notes.
  * @param {{nom: string, marque: string, famille: string, sousFamille: string,
- *   tete: string[], coeur: string[], fond: string[]}} p
+ *   tete: string[], coeur: string[], fond: string[], familleLabels?: string[]}} p
  * @returns {{words: string[], compact: string, nomCompact: string, noteWords: string[]}}
  */
-export function buildIndex({ nom, marque, famille, sousFamille, tete, coeur, fond }) {
+export function buildIndex({ nom, marque, famille, sousFamille, tete, coeur, fond, familleLabels = [] }) {
   const text = normalize(`${nom} ${marque}`);
-  const notes = normalize([famille, sousFamille, ...tete, ...coeur, ...fond].join(' '));
+  const notes = normalize([famille, ...familleLabels, sousFamille, ...tete, ...coeur, ...fond].join(' '));
   return {
     words: text.split(' '),
     compact: text.replace(/ /g, ''),

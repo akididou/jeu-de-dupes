@@ -4,6 +4,8 @@
 const CACHE = 'dupes-__VERSION__';
 const CACHE_PREFIX = 'dupes-';
 const API_PATH = '/api/parfums';
+// Lu par js/data.js (FROM_CACHE_HEADER) : la page allume alors le point « données de secours ».
+const FROM_CACHE_HEADER = 'X-From-Cache';
 
 // Liste explicite (pas d'étape de build) : un fichier manquant ferait échouer cache.addAll,
 // d'où le test tests/unit/sw.test.js qui vérifie que chaque entrée existe.
@@ -52,7 +54,14 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-/** Réseau d'abord, copie en cache en cas d'échec ; la dernière réponse valide est conservée. */
+/** Copie d'une réponse en cache, marquée pour que la page sache qu'elle n'est pas fraîche. */
+function markedFromCache(response) {
+  const headers = new Headers(response.headers);
+  headers.set(FROM_CACHE_HEADER, '1');
+  return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+}
+
+/** Réseau d'abord, copie en cache (marquée) en cas d'échec ; la dernière réponse valide est conservée. */
 async function networkFirst(request) {
   const cache = await caches.open(CACHE);
   try {
@@ -61,7 +70,7 @@ async function networkFirst(request) {
     return response;
   } catch (error) {
     const cached = await cache.match(request);
-    if (cached) return cached;
+    if (cached) return markedFromCache(cached);
     throw error;
   }
 }
