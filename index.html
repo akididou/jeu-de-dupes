@@ -1,86 +1,120 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <meta name="description" content="Découvrez les parfums associés aux personnages du film Jeux de Dupes">
-    <title>Parfums des Personnages - Jeux de Dupes</title>
-
-    <!-- Content Security Policy pour la sécurité -->
-    <meta http-equiv="Content-Security-Policy"
-          content="default-src 'self';
-                   script-src 'self';
-                   style-src 'self' 'unsafe-inline';
-                   img-src 'self' data: https:;
-                   connect-src 'self' https://opensheet.elk.sh;">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#2A0D14">
+    <meta name="description" content="Borne Jeux de Dupes : trouvez le numéro de notre version de votre parfum préféré.">
+    <title>Jeux de Dupes</title>
+    <link rel="icon" href="assets/icons/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
     <link rel="stylesheet" href="css/style.css">
 </head>
-
 <body>
-    <!-- Skip to main content pour l'accessibilité -->
-    <a href="#main-content" class="skip-to-content">Aller au contenu principal</a>
+<span class="data-dot" id="data-dot" hidden></span>
 
-    <main id="main-content">
-        <h1 class="sr-only">Jeux de Dupes - Parfums des Personnages</h1>
-        <p class="instructions">Cliquez sur les personnages pour découvrir leurs parfums</p>
+<!-- Écran 1 : accueil -->
+<section class="screen home" id="screen-home" aria-labelledby="home-title">
+    <div class="poster">
+        <img src="assets/affiche.jpg" alt="" class="poster-img">
+        <button class="poster-zone zone-elle" data-univers="femme" type="button">
+            <span class="zone-tag">
+                <span class="zone-title" data-i18n="elle">Elle</span>
+                <span class="zone-sub" data-count="femme"></span>
+            </span>
+        </button>
+        <button class="poster-zone zone-lui" data-univers="homme" type="button">
+            <span class="zone-tag">
+                <span class="zone-title" data-i18n="lui">Lui</span>
+                <span class="zone-sub" data-count="homme"></span>
+            </span>
+        </button>
+    </div>
 
-        <div class="container">
-            <img src="assets/affiche.jpg"
-                 class="image"
-                 alt="Affiche du film Jeux de Dupes montrant les deux personnages principaux">
+    <div class="home-panel">
+        <button class="lang-toggle" type="button" data-lang-toggle></button>
+        <h1 id="home-title" data-i18n="homeTitle">Quel parfum aimez-vous&nbsp;?</h1>
+        <p class="home-lead" data-i18n="homeLead"></p>
+        <form class="search" role="search" data-search-form>
+            <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg>
+            <input type="search" id="home-search" data-search-input
+                   autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+                   enterkeyhint="search" data-i18n-placeholder="placeholder">
+            <label for="home-search" class="sr-only" data-i18n="searchLabel"></label>
+        </form>
+        <p class="home-hint" data-i18n="homeHint"></p>
+    </div>
+</section>
 
-            <!-- ACCESSIBILITÉ: Zones cliquables accessibles au clavier -->
-            <button class="map-area map-area-homme"
-                    style="right: 0; top: 0%; width: 57%; height: 100%"
-                    onclick="openModal('homme')"
-                    aria-label="Découvrir les parfums masculins du personnage homme">
-                <span class="sr-only">Cliquez pour voir les parfums masculins</span>
+<!-- Écran 2 : collection / résultats -->
+<section class="screen list" id="screen-list" hidden aria-labelledby="list-title">
+    <header class="list-head">
+        <div class="list-bar">
+            <button class="back" type="button" data-home>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg>
+                <span data-i18n="back">Accueil</span>
             </button>
-
-            <button class="map-area map-area-femme"
-                    style="left: 0; top: 0%; width: 43%; height: 100%;"
-                    onclick="openModal('femme')"
-                    aria-label="Découvrir les parfums féminins du personnage femme">
-                <span class="sr-only">Cliquez pour voir les parfums féminins</span>
+            <div class="segmented" role="group" aria-label="Collection">
+                <button type="button" data-univers="femme" data-i18n="elle">Elle</button>
+                <button type="button" data-univers="homme" data-i18n="lui">Lui</button>
+                <button type="button" data-univers="tous" data-i18n="tous">Tous</button>
+            </div>
+            <button class="lang-toggle" type="button" data-lang-toggle></button>
+        </div>
+        <form class="search search-compact" role="search" data-search-form>
+            <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg>
+            <input type="search" id="list-search" data-search-input
+                   autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+                   enterkeyhint="search" data-i18n-placeholder="placeholder">
+            <label for="list-search" class="sr-only" data-i18n="searchLabel"></label>
+            <button type="button" class="clear" data-clear hidden data-i18n-aria="clear">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
             </button>
+        </form>
+        <div class="rail-tabs" id="rail-tabs" role="group" hidden>
+            <button type="button" data-rail="marques" data-i18n="byBrand">Par marque</button>
+            <button type="button" data-rail="familles" data-i18n="byFamily">Par famille</button>
         </div>
+        <nav class="brand-rail" id="brand-rail" aria-label="Filtres"></nav>
+    </header>
 
-        <!-- Modal Parfums Masculins -->
-        <div id="modalHomme" class="modal" role="dialog" aria-labelledby="modal-homme-title" aria-modal="true">
-            <div class="modal-content">
-                <!-- ACCESSIBILITÉ: Bouton de fermeture accessible au clavier -->
-                <button class="close"
-                        onclick="closeModal('homme')"
-                        aria-label="Fermer la fenêtre des parfums masculins"
-                        type="button">
-                    <span aria-hidden="true">&times;</span>
-                    <span class="sr-only">Fermer</span>
-                </button>
-                <h2 id="modal-homme-title">Collection de Parfums Masculins</h2>
-                <ul class="parfum-list" id="hommeList" role="list"></ul>
-            </div>
-        </div>
-
-        <!-- Modal Parfums Féminins -->
-        <div id="modalFemme" class="modal" role="dialog" aria-labelledby="modal-femme-title" aria-modal="true">
-            <div class="modal-content">
-                <!-- ACCESSIBILITÉ: Bouton de fermeture accessible au clavier -->
-                <button class="close"
-                        onclick="closeModal('femme')"
-                        aria-label="Fermer la fenêtre des parfums féminins"
-                        type="button">
-                    <span aria-hidden="true">&times;</span>
-                    <span class="sr-only">Fermer</span>
-                </button>
-                <h2 id="modal-femme-title">Collection de Parfums Féminins</h2>
-                <ul class="parfum-list" id="femmeList" role="list"></ul>
-            </div>
-        </div>
+    <main class="list-body">
+        <h2 id="list-title" class="list-title"></h2>
+        <p class="list-count" id="list-count" aria-live="polite"></p>
+        <div class="results" id="results"></div>
     </main>
+</section>
 
-    <script src="js/main.js"></script>
+<!-- Fiche parfum : le ticket -->
+<dialog class="ticket-dialog" id="ticket" aria-labelledby="ticket-num">
+    <article class="ticket">
+        <div class="ticket-stub">
+            <span class="ticket-kicker" data-i18n="ticketKicker">Notre version</span>
+            <span class="ticket-num" id="ticket-num"></span>
+        </div>
+        <div class="ticket-body">
+            <span class="ticket-evoque" data-i18n="evoque">Évoque</span>
+            <span class="ticket-nom" id="ticket-nom"></span>
+            <span class="ticket-marque" id="ticket-marque"></span>
+            <span class="ticket-univers" id="ticket-univers"></span>
+            <section class="ticket-notes" id="ticket-notes" hidden>
+                <h3 data-i18n="notesTitle">Notes du parfum original</h3>
+                <dl id="ticket-notes-list"></dl>
+            </section>
+            <p class="ticket-hint" data-i18n="ticketHint"></p>
+            <button type="button" class="ticket-close" data-close-ticket data-i18n="close">Fermer</button>
+        </div>
+    </article>
+</dialog>
+
+<!-- Retour accueil automatique -->
+<div class="idle" id="idle" hidden role="alertdialog" aria-live="assertive">
+    <div class="idle-card">
+        <p id="idle-text"></p>
+        <button type="button" data-idle-continue data-i18n="continue">Continuer</button>
+    </div>
+</div>
+
+<script type="module" src="js/main.js"></script>
 </body>
-
 </html>

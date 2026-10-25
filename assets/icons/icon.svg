@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <title>Jeux de Dupes</title>
+  <rect width="512" height="512" rx="96" fill="#2A0D14"/>
+  <!-- Talon de ticket rouge, encoches latérales et perforation -->
+  <rect x="146" y="96" width="220" height="320" rx="24" fill="#D7262E"/>
+  <circle cx="146" cy="336" r="26" fill="#2A0D14"/>
+  <circle cx="366" cy="336" r="26" fill="#2A0D14"/>
+  <path d="M182 336H330" stroke="#2A0D14" stroke-width="6" stroke-dasharray="14 10"/>
+  <!-- « n° » ivoire -->
+  <g fill="none" stroke="#F5EAD7" stroke-width="30">
+    <path d="M196 180V290M196 215a35 35 0 0 1 70 0V290"/>
+    <circle cx="308" cy="196" r="16" stroke-width="10"/>
+  </g>
+</svg>

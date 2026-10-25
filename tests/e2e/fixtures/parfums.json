@@ -1,0 +1,134 @@
+[
+  {
+    "categorie": "femme",
+    "numero": "46",
+    "nom": "J'ADORE",
+    "marque": "CHRISTIAN DIOR",
+    "famille": "Floral",
+    "sous_famille": "Floral fruité",
+    "notes_tete": "Poire, Melon, Bergamote, Mandarine, Pêche",
+    "notes_coeur": "Jasmin, Rose de Damas, Ylang-ylang, Tubéreuse, Freesia",
+    "notes_fond": "Musc, Vanille, Mûre, Cèdre"
+  },
+  {
+    "categorie": "femme",
+    "numero": "193",
+    "nom": "MISS DIOR",
+    "marque": "CHRISTIAN DIOR",
+    "famille": "Floral",
+    "sous_famille": "Floral rosé",
+    "notes_tete": "Mandarine, Orange sanguine, Bergamote de Calabre, Poivre rose",
+    "notes_coeur": "Rose de Grasse, Rose de Damas, Feuille de jasmin",
+    "notes_fond": "Patchouli, Bois de rose"
+  },
+  {
+    "categorie": "femme",
+    "numero": "42",
+    "nom": "ADDICT",
+    "marque": "CHRISTIAN DIOR",
+    "famille": "Ambré",
+    "sous_famille": "Ambré vanillé floral",
+    "notes_tete": "Mûre, Feuille de mandarinier, Fleur d'arbre de soie",
+    "notes_coeur": "Jasmin, Reine de la nuit, Fleur d'oranger, Rose",
+    "notes_fond": "Vanille, Santal, Fève tonka"
+  },
+  {
+    "categorie": "femme",
+    "numero": "515",
+    "nom": "ACQUA DI PARMA",
+    "marque": "ACQUA DI PARMA",
+    "famille": "Hespéridé",
+    "sous_famille": "Hespéridé aromatique (eau de Cologne)",
+    "notes_tete": "Citron, Orange douce, Bergamote",
+    "notes_coeur": "Lavande, Rose, Verveine, Romarin",
+    "notes_fond": "Vétiver, Bois de santal, Patchouli"
+  },
+  {
+    "categorie": "femme",
+    "numero": "25",
+    "nom": "HAPPY",
+    "marque": "CLINIQUE",
+    "famille": "Hespéridé",
+    "sous_famille": "Hespéridé floral fruité",
+    "notes_tete": "Pamplemousse rose, Mandarine, Bergamote, Orange",
+    "notes_coeur": "Muguet, Freesia, Rose, Orchidée",
+    "notes_fond": "Musc, Ambre, Mimosa, Magnolia"
+  },
+  {
+    "categorie": "femme",
+    "numero": "677",
+    "nom": "ROUGE SMOCKING EXTRAIT",
+    "marque": "BDK PARFUMS",
+    "famille": "Gourmand",
+    "sous_famille": "Gourmand cerise ambré",
+    "notes_tete": "Cerise, Amande, Poivre rose, Mandarine, Bergamote",
+    "notes_coeur": "Accord lacté, Fève tonka, Baume du Pérou, Labdanum",
+    "notes_fond": "Oud, Vanille, Patchouli, Rhum, Ambre"
+  },
+  {
+    "categorie": "femme",
+    "numero": "5",
+    "nom": "ARMANI CODE",
+    "marque": "ARMANI",
+    "famille": "Floral",
+    "sous_famille": "Floral oriental vanillé",
+    "notes_tete": "Gingembre, Néroli, Miel",
+    "notes_coeur": "Jasmin, Fleur d'oranger, Bois de santal",
+    "notes_fond": "Vanille, Fève tonka"
+  },
+  {
+    "categorie": "homme",
+    "numero": "342",
+    "nom": "SAUVAGE",
+    "marque": "CHRISTIAN DIOR",
+    "famille": "Aromatique",
+    "sous_famille": "Aromatique épicé ambré frais",
+    "notes_tete": "Bergamote de Calabre, Poivre",
+    "notes_coeur": "Poivre du Sichuan, Lavande, Géranium, Élémi",
+    "notes_fond": "Ambroxan, Cèdre, Labdanum"
+  },
+  {
+    "categorie": "homme",
+    "numero": "264",
+    "nom": "EAU SAUVAGE",
+    "marque": "CHRISTIAN DIOR",
+    "famille": "Hespéridé",
+    "sous_famille": "Hespéridé aromatique chyprée",
+    "notes_tete": "Citron, Bergamote, Basilic, Romarin",
+    "notes_coeur": "Jasmin, Œillet, Coriandre, Racine d'iris, Hédione",
+    "notes_fond": "Vétiver, Mousse de chêne, Musc, Ambre"
+  },
+  {
+    "categorie": "homme",
+    "numero": "277",
+    "nom": "DIOR HOMME",
+    "marque": "CHRISTIAN DIOR",
+    "famille": "Boisé",
+    "sous_famille": "Boisé poudré iris cacao",
+    "notes_tete": "Bergamote, Lavande, Sauge",
+    "notes_coeur": "Iris, Cacao, Ambre",
+    "notes_fond": "Cuir, Patchouli, Vétiver"
+  },
+  {
+    "categorie": "homme",
+    "numero": "504",
+    "nom": "CK ONE",
+    "marque": "CALVIN KLEIN",
+    "famille": "Hespéridé",
+    "sous_famille": "Hespéridé aromatique thé vert",
+    "notes_tete": "Bergamote, Cardamome, Papaye, Ananas, Mandarine",
+    "notes_coeur": "Thé vert, Violette, Muscade, Rose, Jasmin",
+    "notes_fond": "Musc, Ambre, Cèdre, Bois de santal, Mousse de chêne"
+  },
+  {
+    "categorie": "homme",
+    "numero": "292",
+    "nom": "FARENHEIT",
+    "marque": "CHRISTIAN DIOR",
+    "famille": "Aromatique",
+    "sous_famille": "Fougère aromatique cuirée",
+    "notes_tete": "Mandarine, Bergamote, Lavande, Muscade",
+    "notes_coeur": "Feuille de violette, Œillet, Jasmin, Cèdre",
+    "notes_fond": "Cuir, Vétiver, Patchouli, Ambre"
+  }
+]

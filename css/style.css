@@ -1,376 +1,795 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+/* Borne « Jeux de Dupes » — thème « cinéma rétro » tiré de l'affiche */
+
+/* Polices hébergées avec le site (fontsource, variables). unicode-range repris de fontsource. */
+@font-face {
+    font-family: "Figtree"; font-style: normal; font-weight: 300 900; font-display: swap;
+    src: url("../assets/fonts/figtree-latin-ext-wght-normal.woff2") format("woff2");
+    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+@font-face {
+    font-family: "Figtree"; font-style: normal; font-weight: 300 900; font-display: swap;
+    src: url("../assets/fonts/figtree-latin-wght-normal.woff2") format("woff2");
+    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face {
+    font-family: "Big Shoulders Display"; font-style: normal; font-weight: 100 900; font-display: swap;
+    src: url("../assets/fonts/big-shoulders-display-latin-ext-wght-normal.woff2") format("woff2");
+    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+@font-face {
+    font-family: "Big Shoulders Display"; font-style: normal; font-weight: 100 900; font-display: swap;
+    src: url("../assets/fonts/big-shoulders-display-latin-wght-normal.woff2") format("woff2");
+    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
 }
 
-/* ACCESSIBILITÉ: Classe pour masquer visuellement mais garder accessible aux lecteurs d'écran */
-.sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border-width: 0;
+:root {
+    --velours: #2A0D14;
+    --velours-2: #3B141E;
+    --velours-3: #4E1B27;
+    --rouge: #D7262E;
+    --rouge-vif: #EF3A40;
+    --ivoire: #F5EAD7;
+    --ivoire-2: #E8D8BC;
+    --laiton: #C9A25B;
+    --sarcelle: #5CC4BE;
+    --texte: #F5EAD7;
+    --texte-doux: #CDB9A6;
+
+    --f-display: "Big Shoulders Display", "Arial Narrow", sans-serif;
+    --f-texte: "Figtree", system-ui, sans-serif;
+
+    --r-s: 6px;
+    --r-m: 14px;
+    --tap: 56px;
 }
 
-/* ACCESSIBILITÉ: Skip to content link */
-.skip-to-content {
-    position: absolute;
-    top: -40px;
-    left: 0;
-    background: #000;
-    color: white;
-    padding: 0.5rem 1rem;
-    text-decoration: none;
-    z-index: 10000;
-    font-weight: 600;
-    border-radius: 0 0 4px 0;
-}
+*, *::before, *::after { box-sizing: border-box; }
 
-.skip-to-content:focus {
-    top: 0;
-    outline: 3px solid #4A90E2;
-    outline-offset: 2px;
-}
-
-html {
-    font-size: 16px;
-    scroll-behavior: smooth;
-}
+html, body { height: 100%; }
 
 body {
-    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: black;
-    min-height: 100vh;
-    padding: clamp(10px, 3vw, 20px);
+    margin: 0;
+    background: var(--velours);
+    color: var(--texte);
+    font-family: var(--f-texte);
+    font-size: 1.0625rem;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    user-select: none;
+    overflow: hidden;
+}
+
+input { user-select: text; }
+
+button {
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+}
+
+:focus-visible {
+    outline: 3px solid var(--sarcelle);
+    outline-offset: 3px;
+}
+
+.sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+[hidden] { display: none !important; }
+
+.screen {
+    height: 100dvh;
+    width: 100%;
+}
+
+/* ---------- Accueil ---------- */
+
+.home {
+    display: grid;
+    grid-template-columns: minmax(0, auto) minmax(340px, 1fr);
+}
+
+.poster {
+    position: relative;
+    height: 100dvh;
+    aspect-ratio: 766 / 1022;
+    overflow: hidden;
+    background: #000;
+}
+
+.poster-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 30%;
+    display: block;
+}
+
+.poster-zone {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    display: flex;
+    align-items: center;
+}
+
+.zone-elle { left: 0; width: 43%; justify-content: flex-start; }
+.zone-lui  { right: 0; width: 57%; justify-content: flex-end; }
+
+.zone-elle .zone-tag { margin-top: 30%; border-radius: 0 var(--r-m) var(--r-m) 0; }
+.zone-lui  .zone-tag { margin-top: -6%; border-radius: var(--r-m) 0 0 var(--r-m); text-align: right; }
+
+.zone-tag {
+    display: flex;
+    flex-direction: column;
+    padding: 14px 26px 16px;
+    background: var(--ivoire);
+    color: var(--velours);
+    box-shadow: 0 10px 30px rgba(20, 0, 5, .55);
+    transition: transform .15s ease;
+    animation: tag-in .7s cubic-bezier(.2, .8, .2, 1) .3s both;
+}
+
+.zone-lui .zone-tag { animation-delay: .45s; }
+
+.poster-zone:active .zone-tag { transform: scale(.96); }
+
+.zone-title {
+    font-family: var(--f-display);
+    font-weight: 900;
+    font-size: clamp(2.6rem, 6vw, 4rem);
+    line-height: .9;
+    color: var(--rouge);
+}
+
+.zone-sub {
+    font-size: .95rem;
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+@keyframes tag-in {
+    from { opacity: 0; translate: var(--from, -24px) 0; }
+    to   { opacity: 1; translate: 0 0; }
+}
+.zone-lui .zone-tag { --from: 24px; }
+
+.home-panel {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 48px clamp(28px, 5vw, 72px);
+    background:
+        radial-gradient(circle at 85% 12%, rgba(92, 196, 190, .18), transparent 22%),
+        radial-gradient(circle at 70% 88%, rgba(201, 162, 91, .16), transparent 26%),
+        var(--velours);
+}
+
+.home-panel h1 {
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: clamp(2.8rem, 6.2vw, 5.2rem);
+    line-height: .95;
+    letter-spacing: .005em;
+    margin: 0 0 18px;
+    max-width: 10ch;
+}
+
+.home-lead {
+    margin: 0 0 32px;
+    max-width: 34ch;
+    color: var(--texte-doux);
+    font-size: 1.15rem;
+}
+
+.home-hint {
+    margin: 22px 0 0;
+    color: var(--texte-doux);
+    font-size: .95rem;
+    max-width: 36ch;
+}
+
+.lang-toggle {
+    min-width: var(--tap);
+    height: 48px;
+    padding: 0 14px;
+    border-radius: 999px;
+    border: 1.5px solid var(--laiton);
+    background: transparent;
+    color: var(--laiton);
+    font-weight: 700;
+    font-size: .95rem;
+}
+
+.home-panel .lang-toggle {
+    position: absolute;
+    top: max(20px, env(safe-area-inset-top));
+    right: 20px;
+}
+
+/* ---------- Recherche ---------- */
+
+.search {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search input {
+    width: 100%;
+    height: 68px;
+    padding: 0 22px 0 60px;
+    border-radius: var(--r-m);
+    border: 2px solid transparent;
+    background: var(--ivoire);
+    color: var(--velours);
+    font: 500 1.25rem var(--f-texte);
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.search input::placeholder { color: #8C7466; }
+.search input::-webkit-search-cancel-button { display: none; }
+.search input:focus { outline: none; border-color: var(--sarcelle); box-shadow: 0 0 0 4px rgba(92, 196, 190, .25); }
+
+.search-icon {
+    position: absolute;
+    left: 20px;
+    width: 26px;
+    height: 26px;
+    fill: none;
+    stroke: var(--velours);
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    pointer-events: none;
+}
+
+.search-compact input { height: 56px; font-size: 1.1rem; padding-right: 60px; }
+
+.clear {
+    position: absolute;
+    right: 6px;
+    width: 48px;
+    height: 48px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    display: grid;
+    place-items: center;
+}
+
+.clear svg { width: 22px; height: 22px; stroke: var(--velours); stroke-width: 2.4; stroke-linecap: round; fill: none; }
+
+/* ---------- Liste ---------- */
+
+.list {
+    display: flex;
+    flex-direction: column;
+}
+
+.list-head {
+    flex: none;
+    padding: max(14px, env(safe-area-inset-top)) clamp(16px, 3vw, 32px) 0;
+    background: var(--velours);
+    box-shadow: 0 1px 0 var(--velours-3);
+    display: grid;
+    gap: 12px;
+}
+
+.list-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.back {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 48px;
+    height: var(--tap);
+    padding: 0 16px 0 8px;
+    border: 0;
+    border-radius: var(--r-s);
+    background: transparent;
+    font-weight: 600;
+}
+
+.back svg { width: 26px; height: 26px; stroke: currentColor; stroke-width: 2.4; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+.segmented {
+    margin-left: auto;
+    display: inline-flex;
+    padding: 4px;
+    border-radius: 999px;
+    background: var(--velours-2);
+}
+
+.segmented button {
+    min-width: 72px;
+    height: 48px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: 1.35rem;
+    color: var(--texte-doux);
+}
+
+.segmented button[aria-pressed="true"] {
+    background: var(--rouge);
+    color: var(--ivoire);
+}
+
+.brand-rail {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 2px 2px 14px;
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
+}
+.brand-rail::-webkit-scrollbar { display: none; }
+
+.chip {
+    flex: none;
+    height: 48px;
+    padding: 0 18px;
+    border-radius: 999px;
+    border: 1.5px solid var(--velours-3);
+    background: transparent;
+    font-weight: 600;
+    font-size: .98rem;
+    white-space: nowrap;
+    scroll-snap-align: start;
+}
+
+.chip[aria-pressed="true"] {
+    background: var(--ivoire);
+    border-color: var(--ivoire);
+    color: var(--velours);
+}
+
+/* Familles olfactives : une pastille de couleur pour les repérer */
+[data-famille="hesperide"]  { --fam: #E8B83A; }
+[data-famille="aquatique"]  { --fam: #5CC4BE; }
+[data-famille="aromatique"] { --fam: #86B86A; }
+[data-famille="floral"]     { --fam: #E88FB2; }
+[data-famille="chypre"]     { --fam: #A39A5E; }
+[data-famille="boise"]      { --fam: #B9814F; }
+[data-famille="ambre"]      { --fam: #E0892F; }
+[data-famille="gourmand"]   { --fam: #D2A77C; }
+[data-famille="cuir"]       { --fam: #9A6A52; }
+[data-famille="musque"]     { --fam: #C9B9E4; }
+
+.chip[data-famille]::before,
+.parfum-meta[data-famille]::before {
+    content: "";
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin-right: 8px;
+    border-radius: 50%;
+    background: var(--fam);
+    vertical-align: .05em;
+}
+
+.rail-tabs {
+    display: flex;
+    gap: 20px;
+    margin-bottom: -8px;
+}
+
+.rail-tabs button {
+    height: 48px;
+    padding: 0 2px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: var(--texte-doux);
+    font-weight: 600;
+    font-size: .98rem;
+}
+
+.rail-tabs button[aria-pressed="true"] {
+    color: var(--texte);
+    border-bottom-color: var(--rouge);
+}
+
+.list-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 22px clamp(16px, 3vw, 32px) max(40px, env(safe-area-inset-bottom));
+}
+
+.list-title {
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: clamp(2.2rem, 4.5vw, 3.2rem);
+    line-height: 1;
+    margin: 0;
+}
+
+.list-count {
+    margin: 6px 0 22px;
+    color: var(--texte-doux);
+}
+
+.results {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+    gap: 12px;
+}
+
+.brand-group {
+    grid-column: 1 / -1;
+    margin: 18px 0 2px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--velours-3);
+    color: var(--laiton);
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: 1.6rem;
+    line-height: 1.1;
+}
+.brand-group:first-child { margin-top: 0; }
+
+/* Ligne parfum : talon de ticket rouge + informations */
+.parfum {
+    display: flex;
+    align-items: stretch;
+    min-height: 92px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--r-s);
+    background: var(--velours-2);
+    text-align: left;
+    overflow: hidden;
+    transition: background-color .12s ease;
+}
+
+.parfum:active { background: var(--velours-3); }
+
+.parfum-stub {
+    position: relative;
+    flex: none;
+    width: 96px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--rouge);
+    color: var(--ivoire);
+}
+
+/* perforation du talon */
+.parfum-stub::after {
+    content: "";
+    position: absolute;
+    top: 6px;
+    bottom: 6px;
+    right: -1px;
+    border-right: 3px dotted var(--velours-2);
+}
+
+.parfum-stub small {
+    font-size: .75rem;
+    font-weight: 700;
+    opacity: .85;
+}
+
+.parfum-stub b {
+    font-family: var(--f-display);
+    font-weight: 900;
+    font-size: 2.4rem;
+    line-height: .9;
+}
+
+.parfum-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1px;
+    padding: 12px 16px 12px 18px;
+    min-width: 0;
+}
+
+.parfum-evoque {
+    font-size: .8rem;
+    color: var(--texte-doux);
+}
+
+.parfum-nom {
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: 1.55rem;
+    line-height: 1.05;
+    overflow-wrap: anywhere;
+}
+
+.parfum-marque {
+    font-size: .95rem;
+    color: var(--laiton);
+    font-weight: 600;
+}
+
+.parfum-meta {
+    margin-top: 4px;
+    font-size: .8rem;
+    font-weight: 500;
+    color: var(--texte-doux);
+}
+
+.empty {
+    grid-column: 1 / -1;
+    max-width: 44ch;
+    padding: 28px 0;
+    font-size: 1.15rem;
+}
+
+.empty button {
+    margin-top: 16px;
+    height: var(--tap);
+    padding: 0 22px;
+    border-radius: 999px;
+    border: 0;
+    background: var(--ivoire);
+    color: var(--velours);
+    font-weight: 700;
+}
+
+/* ---------- Ticket ---------- */
+
+.ticket-dialog {
+    border: 0;
+    padding: 0;
+    background: transparent;
+    max-width: min(700px, calc(100vw - 32px));
+    max-height: calc(100dvh - 32px);
+    width: 100%;
+    overflow: auto;
+}
+
+.ticket-dialog::backdrop {
+    background: rgba(26, 6, 11, .82);
+    backdrop-filter: blur(6px);
+}
+
+.ticket-dialog[open] .ticket { animation: ticket-in .45s cubic-bezier(.2, .9, .25, 1.15) both; }
+
+@keyframes ticket-in {
+    from { opacity: 0; transform: translateY(60px) rotate(-3deg); }
+    to   { opacity: 1; transform: none; }
+}
+
+.ticket {
+    --notch: 18px;
+    display: grid;
+    grid-template-columns: minmax(150px, 38%) 1fr;
+    background: var(--ivoire);
+    color: var(--velours);
+    border-radius: var(--r-m);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, .55);
+    /* encoches de part et d'autre de la perforation */
+    -webkit-mask:
+        radial-gradient(circle var(--notch) at 38% 0, #0000 98%, #000) top / 100% 51% no-repeat,
+        radial-gradient(circle var(--notch) at 38% 100%, #0000 98%, #000) bottom / 100% 51% no-repeat;
+    mask:
+        radial-gradient(circle var(--notch) at 38% 0, #0000 98%, #000) top / 100% 51% no-repeat,
+        radial-gradient(circle var(--notch) at 38% 100%, #0000 98%, #000) bottom / 100% 51% no-repeat;
+}
+
+.ticket-stub {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    padding: 36px 16px;
+    background: var(--rouge);
+    color: var(--ivoire);
+    border-radius: var(--r-m) 0 0 var(--r-m);
+    border-right: 4px dashed var(--ivoire);
+    text-align: center;
 }
 
-/* Messages utilisateur */
-.user-message {
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 1rem 2rem;
-    border-radius: 8px;
+.ticket-kicker {
     font-weight: 600;
-    z-index: 10001;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    font-size: 1rem;
 }
 
-.user-message-error {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 2px solid #f5c6cb;
+.ticket-num {
+    font-family: var(--f-display);
+    font-weight: 900;
+    font-size: clamp(5rem, 16vw, 8.5rem);
+    line-height: .85;
+    margin-top: 8px;
 }
 
-.user-message-info {
-    background-color: #d1ecf1;
-    color: #0c5460;
-    border: 2px solid #bee5eb;
+.ticket-num::before {
+    content: "n°";
+    font-size: .32em;
+    vertical-align: .9em;
+    margin-right: .06em;
 }
 
-.container {
-    position: relative;
-    margin: 0 auto;
-    background: black;
-    border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-    width: 100%;
-    max-width: 1200px;
+.ticket-body {
+    display: flex;
+    flex-direction: column;
+    padding: 32px 32px 28px 36px;
 }
 
-.image {
-    width: 100%;
-    height: auto;
-    display: block;
-    max-height: calc(100vh - 110px);
-    object-fit: contain;
-    pointer-events: none; /* Permettre aux clics de passer à travers vers les boutons */
+.ticket-evoque { font-size: .95rem; color: #7A5E52; }
+
+.ticket-nom {
+    font-family: var(--f-display);
+    font-weight: 900;
+    font-size: clamp(2.2rem, 6vw, 3.2rem);
+    line-height: .95;
+    margin: 4px 0 6px;
+    overflow-wrap: anywhere;
 }
 
-/* ACCESSIBILITÉ: Zones cliquables transformées en boutons */
-.map-area {
-    position: absolute;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-    background: transparent;
-    border: none;
-    padding: 0;
-    font-size: 0;
-    z-index: 10; /* S'assurer que les boutons sont au-dessus de l'image */
+.ticket-marque { font-weight: 700; font-size: 1.15rem; }
+
+.ticket-univers { font-size: .95rem; color: #7A5E52; margin-top: 2px; }
+
+.ticket-notes {
+    margin-top: 20px;
 }
 
-.map-area:hover {
-    background-color: rgba(255, 255, 255, 0.2);
+.ticket-notes h3 {
+    margin: 0 0 8px;
+    font-size: .95rem;
+    font-weight: 700;
 }
 
-/* ACCESSIBILITÉ: Focus visible pour la navigation au clavier */
-.map-area:focus-visible {
-    outline: 3px solid #4A90E2;
-    outline-offset: -3px;
-    background-color: rgba(74, 144, 226, 0.3);
+.ticket-notes dl {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 6px 14px;
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.35;
 }
 
-.map-area:active {
-    background-color: rgba(255, 255, 255, 0.3);
+.ticket-notes dt {
+    color: #7A5E52;
+    font-weight: 600;
 }
 
-.modal {
-    display: none;
+.ticket-notes dd { margin: 0; }
+
+.ticket-hint {
+    margin: 24px 0 20px;
+    padding-top: 16px;
+    border-top: 1.5px dashed #D3BB95;
+    font-size: 1.05rem;
+}
+
+.ticket-close {
+    margin-top: auto;
+    align-self: flex-start;
+    height: var(--tap);
+    padding: 0 30px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--velours);
+    color: var(--ivoire);
+    font-weight: 700;
+}
+
+/* ---------- Inactivité ---------- */
+
+.idle {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.8);
-    z-index: 1000;
-    backdrop-filter: blur(5px);
+    inset: 0;
+    z-index: 50;
+    display: grid;
+    place-items: end center;
+    padding: 0 16px max(28px, env(safe-area-inset-bottom));
+    background: rgba(26, 6, 11, .55);
 }
 
-.modal-content {
-    position: relative;
-    background-color: #fff;
-    margin: auto;
-    padding: 30px;
-    width: 90%;
-    max-width: 500px;
-    border-radius: 20px;
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
-    transform: translateY(20px);
-    animation: modalSlide 0.3s forwards;
-    height: 80%;
-    top: 10%;
-    overflow-y: auto;
-}
-
-@keyframes modalSlide {
-    to {
-        transform: translateY(0);
-    }
-}
-
-/* ACCESSIBILITÉ: Bouton de fermeture accessible */
-.close {
-    position: absolute;
-    right: 20px;
-    top: 15px;
-    font-size: 28px;
-    cursor: pointer;
-    color: #666;
-    transition: all 0.2s ease;
-    background: transparent;
-    border: 2px solid transparent;
-    border-radius: 4px;
-    padding: 4px 8px;
-    min-width: 44px;
-    min-height: 44px;
+.idle-card {
     display: flex;
     align-items: center;
-    justify-content: center;
-}
-
-.close:hover {
-    color: #000;
-    background-color: #f0f0f0;
-}
-
-/* ACCESSIBILITÉ: Focus visible */
-.close:focus-visible {
-    outline: 3px solid #4A90E2;
-    outline-offset: 2px;
-    border-color: #4A90E2;
-    color: #000;
-}
-
-.modal-content h2 {
-    font-family: 'Playfair Display', -apple-system, serif;
-    color: #1a1a1a;
-    margin-bottom: 20px;
-    font-size: clamp(1.25rem, 4vw, 1.5rem);
-    border-bottom: 2px solid #f0f0f0;
-    padding-bottom: 10px;
-    padding-right: 50px;
-}
-
-.parfum-list {
-    list-style-type: none;
-}
-
-.parfum-list li {
-    padding: 15px;
-    margin: 8px 0;
-    background: #f8f9fa;
-    border-radius: 10px;
-    transition: all 0.3s ease;
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    gap: 15px;
-    align-items: center;
-}
-
-.parfum-numero {
-    color: #666;
-    font-weight: 500;
-    min-width: 45px;
-}
-
-.parfum-name {
+    gap: 20px;
+    padding: 14px 14px 14px 26px;
+    border-radius: 999px;
+    background: var(--ivoire);
+    color: var(--velours);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, .5);
     font-weight: 600;
-    color: #2c3e50;
+    font-size: 1.1rem;
 }
 
-.evoque-label {
-    font-weight: 300;
-    font-style: italic;
+.idle-card p { margin: 0; }
+
+.idle-card button {
+    height: 52px;
+    padding: 0 24px;
+    border-radius: 999px;
+    border: 0;
+    background: var(--rouge);
+    color: var(--ivoire);
+    font-weight: 700;
 }
 
-.parfum-brand {
-    color: #666;
-    font-size: 0.9em;
-    text-align: right;
+.data-dot {
+    position: fixed;
+    right: 10px;
+    bottom: 10px;
+    z-index: 60;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--laiton);
 }
 
-.instructions {
-    text-align: center;
-    color: #fff;
-    margin: clamp(10px, 3vw, 20px) 0;
-    font-size: clamp(1rem, 3vw, 1.2em);
-    padding: 0 10px;
-}
+/* ---------- Portrait, tablette et mobile ---------- */
 
-.empty-message {
-    text-align: center;
-    padding: 2rem;
-    color: #666;
-    font-style: italic;
-}
+@media (orientation: portrait), (max-width: 760px) {
+    body { overflow: hidden; }
 
-/* ACCESSIBILITÉ: Support prefers-reduced-motion */
-@media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-        scroll-behavior: auto !important;
-    }
-
-    .map-area,
-    .close,
-    .modal-content {
-        transition: none !important;
-        animation: none !important;
-    }
-}
-
-/* RESPONSIVE: Très petits mobiles */
-@media (max-width: 400px) {
-    body {
-        padding: 5px;
-    }
-
-    .modal-content {
-        width: 95%;
-        padding: 15px;
-        max-height: 90vh;
-    }
-
-    .parfum-list li {
-        font-size: 0.85rem;
-        padding: 10px;
-    }
-
-    .close {
-        right: 10px;
-        top: 10px;
-        font-size: 24px;
-    }
-}
-
-/* RESPONSIVE: Tablettes et mobiles */
-@media (max-width: 768px) {
-    .container {
-        margin: 10px;
-    }
-
-    .modal-content {
-        margin: auto;
-        padding: 20px;
-        max-height: 85vh;
-        overflow-y: auto;
+    .home {
         display: flex;
-        flex-direction: column;
-        width: 90%;
+        flex-direction: column-reverse;
     }
 
-    .parfum-list {
-        flex-grow: 1;
-        overflow-y: auto;
-        padding-right: 10px;
+    .poster {
+        flex: 1;
+        min-height: 0;
+        width: 100%;
+        height: auto;
+        aspect-ratio: auto;
     }
 
-    .parfum-list li {
-        grid-template-columns: auto 1fr;
-        grid-template-areas:
-            "numero name"
-            "numero brand";
-        gap: 5px;
+    .home-panel {
+        flex: none;
+        justify-content: flex-start;
+        padding: max(22px, env(safe-area-inset-top)) 20px 22px;
     }
 
-    .parfum-numero {
-        grid-area: numero;
-    }
+    .home-panel h1 { font-size: clamp(2.4rem, 9vw, 4.4rem); max-width: none; margin-bottom: 8px; padding-right: 72px; }
+    .home-lead { margin-bottom: 18px; font-size: 1.05rem; max-width: 52ch; }
+    .home-hint { display: none; }
+    .home-panel .lang-toggle { top: max(18px, env(safe-area-inset-top)); right: 16px; }
 
-    .parfum-name {
-        grid-area: name;
-    }
-
-    .parfum-brand {
-        grid-area: brand;
-        text-align: left;
-    }
+    .zone-elle .zone-tag { margin-top: 10%; }
+    .zone-lui  .zone-tag { margin-top: -30%; }
 }
 
-/* RESPONSIVE: Orientation paysage sur mobile */
-@media (max-height: 500px) and (orientation: landscape) {
-    .modal-content {
-        max-height: 95vh;
-        padding: 10px 15px;
-        top: 2.5%;
-    }
+@media (max-width: 560px) {
+    .list-bar { flex-wrap: wrap; }
+    .back span { display: none; }
+    .back { padding: 0 8px; }
+    .segmented { margin-left: 0; }
+    .segmented button { min-width: 0; padding: 0 14px; font-size: 1.2rem; }
+    .lang-toggle { margin-left: auto; }
 
-    .modal-content h2 {
-        font-size: 1.1rem;
-        margin-bottom: 10px;
-    }
+    .search input { height: 58px; font-size: 1.1rem; }
+    .zone-tag { padding: 10px 18px 12px; }
 
-    .parfum-list li {
-        padding: 8px;
-        font-size: 0.9rem;
-    }
+    .ticket { grid-template-columns: 1fr; -webkit-mask: none; mask: none; }
+    .ticket-stub { border-radius: var(--r-m) var(--r-m) 0 0; border-right: 0; border-bottom: 4px dashed var(--ivoire); padding: 26px 16px 22px; }
+    .ticket-body { padding: 24px 24px 24px; }
+    .parfum-stub { width: 84px; }
+    .parfum-stub b { font-size: 2.1rem; }
 }
 
-/* RESPONSIVE: Support du zoom */
-@media (max-width: 600px) {
-    html {
-        font-size: 14px;
-    }
-}
-
-/* Support des écrans haute résolution */
-@supports (font-size: clamp(1rem, 2.5vw, 2.5rem)) {
-    .modal-content h2 {
-        font-size: clamp(1.25rem, 3vw, 1.5rem);
-    }
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
 }
