@@ -112,7 +112,7 @@ test('?idle=3 : retour à l\'accueil en français après inactivité', async ({ 
   await expect(page.locator('#screen-list')).toBeHidden();
   await expect(page.locator('#idle')).toBeHidden();
   await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
-  await expect(page.locator('#home-title')).toHaveText('Quel parfum aimez-vous ?');
+  await expect(page.locator('#home-title')).toHaveText('Quel parfum aimez\u2011vous ?');
 });
 
 test('?idle=3 : l\'avertissement passe au-dessus du ticket et reste cliquable', async ({ page }) => {

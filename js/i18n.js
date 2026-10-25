@@ -5,7 +5,7 @@ const DEFAULT_LANG = 'fr';
 export const TEXTS = {
   fr: {
     elle: 'Elle', lui: 'Lui', tous: 'Tous',
-    homeTitle: 'Quel parfum aimez-vous ?',
+    homeTitle: 'Quel parfum aimez\u2011vous\u00A0?',
     homeLead: 'Dites-nous votre parfum préféré : nous vous donnons le numéro de notre version qui l’évoque.',
     homeHint: 'Vous préférez parcourir ? Touchez Elle ou Lui sur l’affiche.',
     placeholder: 'Ex. Sauvage, J’adore, Chanel…',

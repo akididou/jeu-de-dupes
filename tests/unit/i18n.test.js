@@ -21,6 +21,10 @@ describe('translate', () => {
     expect(translate('en', 'unavailable')).toBe('The collection is temporarily unavailable. Please ask a sales associate.');
   });
 
+  test('le titre d’accueil français garde « aimez-vous » insécable (trait d’union U+2011, espace insécable avant « ? »)', () => {
+    expect(translate('fr', 'homeTitle')).toBe('Quel parfum aimez‑vous ?');
+  });
+
   test('retombe sur le français pour une langue inconnue', () => {
     expect(translate('de', 'elle')).toBe('Elle');
   });
